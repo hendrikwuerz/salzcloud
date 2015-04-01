@@ -1,0 +1,302 @@
+/* ----------------------------------------------------------------------------------------------------------------- */
+html {
+    height: 100%;
+}
+body {
+    height: 100%;
+    background-color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 17px;
+    color: #000000;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+h1, h2, h3, .topic {
+    font-family: Times New Roman, Helvetica, sans-serif;
+    padding: 0;
+    margin: 0;
+    text-align: center;
+}
+
+h1 {
+    font-size: 37px;
+}
+
+h2 {
+    font-size: 27px;
+}
+
+a:link, a:visited, a:hover, a:active, a:focus {
+    text-decoration: underline;
+    color: #000000;
+}
+
+/* ----------------------------------------------------------------------------------------------------------------- */
+
+.block {
+    visibility: hidden;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    padding: 10px;
+    box-sizing: border-box;
+    background-color: #dddddd;
+    box-shadow: 0 0 20px 0 rgba(50, 50, 50, 0.5);
+    border-radius: 10px;
+    z-index: 100;
+}
+
+/* -------------------------------------------------*/
+#overlay {
+    visibility: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.4);
+    opacity: 0;
+    -webkit-transition: opacity 1s ease;
+    -moz-transition: opacity 1s ease;
+    -ms-transition: opacity 1s ease;
+    -o-transition: opacity 1s ease;
+    transition: opacity 1s ease;
+    z-index: 10;
+}
+
+/* -------------------------------------------------*/
+#wait.block {
+    width: 45px;
+    height: 45px;
+    margin: -23px auto auto -23px;
+    z-index: 510;
+}
+html.wait #overlay {
+    visibility: visible;
+    opacity: 1;
+    z-index: 500 !important;
+}
+html.wait #wait.block {
+    visibility: visible;
+}
+
+/* -------------------------------------------------*/
+#success.block {
+    height: 260px;
+    width: 400px;
+    margin: -130px auto auto -200px;
+    background: url("img/success.png") no-repeat center bottom #dddddd;
+    padding-bottom: 120px;
+    border: 2px solid #009900;
+    text-align: center;
+    z-index: 200;
+}
+html.success-visible #success.block,
+html.success-visible #overlay {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* -------------------------------------------------*/
+#error.block {
+    height: 260px;
+    width: 400px;
+    margin: -130px auto auto -200px;
+    background: url("img/error.png") no-repeat center bottom #dddddd;
+    padding-bottom: 120px;
+    border: 2px solid #ff0000;
+    text-align: center;
+    z-index: 200;
+}
+html.error-visible #error.block,
+html.error-visible #overlay {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* -------------------------------------------------*/
+#footer {
+    position: relative;
+    text-align: right;
+    font-size: 9px;
+    margin: auto;
+    padding: 10px 0 2px;
+    width: 900px;
+}
+
+/* -------------------------------------------------*/
+#site {
+    width: 900px;
+    background-color: #ffffff;
+    border: 10px solid #990011;
+    border-radius: 10px;
+    padding: 0 8px;
+    margin: auto;
+    overflow: hidden;
+    position: relative;
+}
+
+/* -------------------------------------------------*/
+#site #header {
+    padding: 10px;
+    text-align: center;
+}
+
+#site #header a {
+    font-size: 60px;
+    font-weight: bold;
+}
+
+.close {
+    display: block;
+    position: absolute;
+    height: 20px;
+    width: 20px;
+    right: 10px;
+    top: 10px;
+    cursor: pointer;
+    background: url("img/close.png") no-repeat scroll right top rgba(0, 0, 0, 0);
+}
+
+/* ----------------------------------------------------------------------------------------------------------------- */
+#login.block {
+    width: 400px;
+    height: 300px;
+    margin: -150px auto auto -200px;
+}
+html.login-visible #login.block,
+html.login-visible #overlay {
+    visibility: visible;
+    opacity: 1;
+}
+
+
+/* ----------------------------------------------------------------------------------------------------------------- */
+#upload.block {
+    width: 400px;
+    height: 300px;
+    margin: -150px auto auto -200px;
+}
+html.upload-visible #upload.block,
+html.upload-visible #overlay {
+    visibility: visible;
+    opacity: 1;
+}
+#upload.block > input {
+    display: block;
+    width: 300px;
+    margin-top: 2px;
+}
+#upload.block > button {
+    margin-top: 10px;
+}
+
+/* ----------------------------------------------------------------------------------------------------------------- */
+#details.block {
+    width: 400px;
+    top: 10%;
+    margin: 0 auto auto -200px;
+    background-color: #dddddd;
+    border: 2px solid #000000;
+    text-align: left;
+    z-index: 200;
+}
+#details.block img {
+    display: none;
+    padding-top: 10px;
+    max-width: 100%;
+}
+#details.block.image img {
+    display: block;
+}
+#details.block form {
+    border: 1px solid #000000;
+    padding: 5px;
+    margin-top: 10px;
+}
+#details.block form.loading {
+    opacity: 0.2;
+}
+#details.block.new-file .row.hotlink,
+#details.block.new-file .row.api-link {
+    display: none;
+}
+#details.block form .save,
+#details.block form .add,
+#details.block form .remove {
+    display: inline-block;
+    cursor: pointer;
+    margin-left: 5px;
+    height: 1em;
+    width: 1em;
+    vertical-align: middle;
+}
+#details.block form .add {
+    background: url("img/add.svg") no-repeat scroll center / 1em auto rgba(0, 0, 0, 0);
+}
+#details.block form .save {
+    background: url("img/save.svg") no-repeat scroll left center / 1em auto rgba(0, 0, 0, 0);
+}
+#details.block form .remove {
+    background: url("img/remove.svg") no-repeat scroll center top / 100% auto rgba(0, 0, 0, 0);
+}
+#details.block form .content {
+    margin-left: 15px;
+}
+#details.block form .content .row {
+    margin: 5px 0;
+}
+#details.block .row.hotlink a,
+#details.block .row.api-link a {
+    font-size: 10px;
+    vertical-align: middle;
+}
+#details.block form .content .row.template {
+    display: none;
+}
+html.details-visible #details.block,
+html.details-visible #overlay {
+    visibility: visible;
+    opacity: 1;
+}
+
+
+
+/* ----------------------------------------------------------------------------------------------------------------- */
+#menu .upload {
+    height: 40px;
+    cursor: pointer;
+}
+
+/* ----------------------------------------------------------------------------------------------------------------- */
+#files > div {
+    position: relative;
+    display: inline-block;
+    box-sizing: border-box;
+    height: 100px;
+    width: 100px;
+    margin: 10px;
+    overflow: hidden;
+    background-color: rgba(153, 0, 17, 0.15);
+    border: 2px solid #990011;
+    cursor: pointer;
+}
+#files > div:hover {
+    background-color: rgba(153, 0, 17, 0.1);
+    border-color: rgba(153, 0, 17, 0.8);
+}
+#files > div > span {
+    position: absolute;
+    text-align: center;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 5px;
+    overflow: hidden;
+}
+#files > div.folder > span {
+    top: 0;
+    bottom: auto;
+    font-weight: bold;
+}
