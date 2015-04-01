@@ -132,8 +132,8 @@ $(function() {
         details.find('h2').html( elem.attr('data-type') == 'folder' ? elem.attr('data-name') : elem.attr('data-title') );
         details.find('.hotlink a').attr('href', elem.attr('data-hotlink') );
         details.find('.hotlink a').html(elem.attr('data-hotlink') );
-        details.find('.api-link a').attr('href', "http://cloud.salzhimmel.de/api.php?q=download&v=" + elem.attr('data-id') );
-        details.find('.api-link a').html("http://cloud.salzhimmel.de/api.php?q=download&v=" + elem.attr('data-id') );
+        details.find('.api-link a').attr('href', "http://cloud.salzhimmel.de/api.php?q=get_file&v=" + elem.attr('data-id') );
+        details.find('.api-link a').html("http://cloud.salzhimmel.de/api.php?q=get_file&v=" + elem.attr('data-id') );
         var img = details.find('img');
         var type = elem.attr('data-type');
         if(type.length > 'image'.length && type.slice(0, 'image'.length) == 'image') { // file is an image -> display
