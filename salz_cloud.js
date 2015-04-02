@@ -45,6 +45,7 @@ $(function() {
         details.find('form[name=attributes]').submit('click', function(event) {uploadFile(); return false;});
         details.find('form[name=access-rights]').submit('click', function(event) {updateRights(); return false;});
         details.find('form[name=access-rights] .add').on('click', addRightsField);
+        details.find('form[name=operations] .delete').on('click', deleteFile);
 
         // load root folder
         get_folder();
@@ -56,6 +57,8 @@ $(function() {
     this.show_login = show_login;
     this.show_folder = get_folder;
     this.listPopups = listPopups;
+    this.closePopup = closePopup;
+    this.loading = loading;
 
     //show login_screen
     function show_login() {
@@ -111,6 +114,9 @@ $(function() {
 
         var access_form = details.find("form[name='access-rights']");
         access_form.css('display', 'none');
+
+        var operations_form = details.find("form[name='operations']");
+        operations_form.css('display', 'none');
 
         addPopup('details-visible');
     }
@@ -211,6 +217,15 @@ $(function() {
                 } else { // no admin rights
                     access_form.css('display', 'none');
                 }
+
+                // OPERATIONS (ADMIN)
+                var operations_form = details.find("form[name='operations']");
+                if(admin) {
+                    operations_form.css('display', 'block');
+                } else {
+                    operations_form.css('display', 'none');
+                }
+
                 loading(false);
             });
     }
@@ -246,9 +261,9 @@ $(function() {
         // how to end upload process
         var always = function() {
             storage.selectedFiles = [];
-            closePopup('upload-visible');
             get_folder();
             loading(false);
+            closePopup('details-visible');
         };
 
         // file ID - will be changed after uploading a file
@@ -275,7 +290,7 @@ $(function() {
                 .fail(function(jqXHR, textStatus, errorThrown) {
                     console.log('JQuery UPLOAD ERROR: ' + textStatus);
                     errors = true;
-                })
+                });
             $.when(set_file_request, set_file_attributes_request).always(function() {
                     if(errors) showError('Fehler', 'Die Daten konnten nicht gespeichert werden');
                     else showSuccess('Gespeichert', 'Die Daten wurden gespeichert');
@@ -316,6 +331,27 @@ $(function() {
             })
             .always(function() {
                 loading(false);
+            });
+    }
+
+    function deleteFile() {
+        if(!confirm("Diese Datei endgültig löschen?")) return;
+        loading(true);
+        var file_id = details.find('input[name=id]').val();
+        api.delete_file(file_id)
+            .done(function(data, textStatus, jqXHR) {
+                showSuccess('Gelöscht', 'Die Datei wurde gelöscht');
+                closePopup("details-visible");
+            })
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                console.log('File could not be deleted correctly ' + textStatus);
+                console.log(errorThrown);
+                showError('Fehler', 'Die Datei konnte nicht gelöscht werden. Bei der Ausführung trat ein Fehler auf');
+            })
+            .always(function() {
+                get_folder();
+                loading(false);
+                closePopup('details-visible');
             });
     }
 
@@ -407,7 +443,6 @@ $(function() {
 
         set_file: function (id, selected_files) {
             var file_data = new FormData();
-            console.log(id);
             file_data.append('id', id);
             $.each(selected_files, function (key, value) {
                 file_data.append(key, value);
@@ -421,6 +456,14 @@ $(function() {
                 processData: false, // Don't process the files
                 contentType: false // Set content type to false as jQuery will tell the server its a query string request
             })
+        },
+
+        delete_file: function (id) {
+            return $.ajax({
+                url: 'api.php?q=delete_file&id=' + id,
+                type: 'GET',
+                dataType: 'json'
+            });
         },
 
         get_file_attributes: function (id) {

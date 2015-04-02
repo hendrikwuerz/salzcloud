@@ -64,7 +64,7 @@ header('Content-Type: text/html; charset=UTF-8');
     <h2></h2>
     <span class="close"></span>
 
-    <form action="#" method="" name="attributes">
+    <form action="#" method="get" name="attributes">
         <input type="hidden" name="type">
         <input type="hidden" name="id">
 
@@ -91,7 +91,7 @@ header('Content-Type: text/html; charset=UTF-8');
             </div>
         </div>
     </form>
-    <form action="#" method="" name="access-rights">
+    <form action="#" method="get" name="access-rights">
         <input type="hidden" name="type">
         <input type="hidden" name="id">
 
@@ -106,6 +106,14 @@ header('Content-Type: text/html; charset=UTF-8');
                 <input placeholder="Access" name="access[]">
                 <span class="remove"></span>
             </div>
+        </div>
+    </form>
+    <form action="#" method="get" name="operations">
+        <div class="header">
+            Operationen
+        </div>
+        <div class="content">
+            <span class="delete">Datei endgültig löschen</span>
         </div>
     </form>
     <img src="#" alt="" title="">

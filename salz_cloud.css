@@ -242,6 +242,11 @@ html.upload-visible #overlay {
 #details.block form .remove {
     background: url("img/remove.svg") no-repeat scroll center top / 100% auto rgba(0, 0, 0, 0);
 }
+#details.block form .delete {
+    background: url("img/remove.svg") no-repeat scroll left center rgba(0, 0, 0, 0);
+    cursor: pointer;
+    padding-left: 22px;
+}
 #details.block form .content {
     margin-left: 15px;
 }
