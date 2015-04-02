@@ -106,7 +106,7 @@ $(function() {
 
         var attribute_form = details.find('form[name=attributes]');
         attribute_form.find('input[name=type]').val('file');
-        attribute_form.find('input[name=elem]').val('');
+        attribute_form.find('input[name=id]').val('');
         attribute_form.find('input[name=title]').val('');
         attribute_form.css('display', 'block');
 
@@ -168,7 +168,7 @@ $(function() {
                 var attribute_form = details.find('form[name=attributes]');
                 if(write) {
                     attribute_form.find('input[name=type]').val(elem.attr('data-data_type'));
-                    attribute_form.find('input[name=elem]').val(elem.attr('data-id'));
+                    attribute_form.find('input[name=id]').val(elem.attr('data-id'));
                     attribute_form.find('input[name=title]').val( elem.attr('data-title') );
                     attribute_form.css('display', 'block');
                 } else { // no write rights
@@ -258,12 +258,13 @@ $(function() {
         $(window).focus();
 
         // file ID - will be changed after uploading a file
-        var file_id = details.find('input[name=elem]').val(); // ID if updating else ''
+        var file_id = details.find('input[name=id]').val(); // ID if updating else ''
 
         // upload a file
         if(storage.selectedFiles.length > 0) {
             var errors = false;
-            api.set_file(file_id, storage.selectedFiles)
+            var set_file_attributes_request;
+            var set_file_request = api.set_file(file_id, storage.selectedFiles)
                 .done(function( data ) {
                     if(file_id != '') { // uploaded a new image -> refresh
                         details.find('img').attr('src', api.get_file(file_id, {width: 400, t: new Date().getTime()}));
@@ -271,7 +272,7 @@ $(function() {
                     file_id = data.id; // Save file ID (possible new file)
 
                     // set attributes
-                    api.set_file_attributes(file_id, details.find('input[name=title]').val())
+                    set_file_attributes_request = api.set_file_attributes(file_id, details.find('input[name=title]').val())
                         .fail(function(jqXHR, textStatus, errorThrown) {
                             console.log('JQuery UPLOAD ERROR: ' + textStatus);
                             errors = true;
@@ -280,7 +281,8 @@ $(function() {
                 .fail(function(jqXHR, textStatus, errorThrown) {
                     console.log('JQuery UPLOAD ERROR: ' + textStatus);
                     errors = true;
-                }).always(function() {
+                })
+            $.when(set_file_request, set_file_attributes_request).always(function() {
                     if(errors) showError('Fehler', 'Die Daten konnten nicht gespeichert werden');
                     else showSuccess('Gespeichert', 'Die Daten wurden gespeichert');
                     always();
@@ -406,6 +408,7 @@ $(function() {
 
         set_file: function (id, selected_files) {
             var file_data = new FormData();
+            console.log(id);
             file_data.append('id', id);
             $.each(selected_files, function (key, value) {
                 file_data.append(key, value);

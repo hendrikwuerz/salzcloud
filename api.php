@@ -176,6 +176,7 @@ class CloudAPI {
         $sql = "SELECT files.id, files.title, files.type, files.filename, files.folder
                 FROM files
                 WHERE files.id = $id";
+        $data = [];
         if($result = $mysqli->query($sql)) {
             while($r = $result->fetch_assoc()) {
                 $r['data_type'] = 'file';
