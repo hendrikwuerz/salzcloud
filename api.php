@@ -466,7 +466,7 @@ class Util {
         $sql = "SELECT rights.access
             FROM rights
             WHERE
-                rights.user_id = ".$current_user->id." AND
+                (rights.user_id = ".$current_user->id." OR rights.user_id = 1) AND
                 rights.data_type LIKE '$type' AND
                 rights.data_id = $elem";
 
