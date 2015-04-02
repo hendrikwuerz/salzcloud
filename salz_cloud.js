@@ -40,7 +40,7 @@ $(function() {
         error.on('click', function(){closePopup('error-visible')});
         login.find('.close').on('click', function(){closePopup("login-visible")});
         menu.find('.upload').on('click', newFile);
-        details.find('input[type=file]').on('change', function(event) {storage.selectedFiles = event.target.files;});
+        details.find('input[type=file]').on('change', function(event) {storage.selectedFiles = event.target.files; var title_input = details.find("form[name=attributes] input[name=title]"); if(title_input.val() == '') title_input.val(event.target.files[0].name); console.log(event.target.files[0].name);});
         details.find('.close').on('click', function(){closePopup("details-visible")});
         details.find('form[name=attributes]').submit('click', function(event) {uploadFile(); return false;});
         details.find('form[name=access-rights]').submit('click', function(event) {updateRights(); return false;});
@@ -57,8 +57,6 @@ $(function() {
     this.show_login = show_login;
     this.show_folder = get_folder;
     this.listPopups = listPopups;
-    this.closePopup = closePopup;
-    this.loading = loading;
 
     //show login_screen
     function show_login() {
@@ -435,8 +433,10 @@ $(function() {
 
         get_file: function (id, options) {
             var final = 'http://cloud.salzhimmel.de/api.php?q=get_file&id=' + id;
-            if(options != undefined && options != null && options != {})
+            if(options != undefined && options != null && options != {}) {
+                options = {w: options};
                 final += "&" + $.param(options);
+            }
 
             return final;
         },

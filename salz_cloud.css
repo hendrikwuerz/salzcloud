@@ -300,6 +300,7 @@ html.details-visible #overlay {
     right: 0;
     margin: 5px;
     overflow: hidden;
+    word-wrap: break-word;
 }
 #files > div.folder > span {
     top: 0;

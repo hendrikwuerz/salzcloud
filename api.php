@@ -557,7 +557,7 @@ else if($_GET['q'] == 'get_current_user') { // list the content of the folder wi
     CloudAPI::getCurrentUser();
 
 } else if($_GET['q'] == 'get_file') { // gets the uploaded file with the passed ID and the wished width
-    CloudAPI::getFile($_GET['id'], (isset($_GET['w']) ? array('width'=>$_GET['w']) : array()));
+    CloudAPI::getFile($_GET['id'], (isset($_GET['w']) ? $_GET['w'] : array()));
 
 } else if($_GET['q'] == 'set_file') { // sets the uploaded file for the passed ID
     CloudAPI::setFile($_FILES[0], $_POST['id']);
