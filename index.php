@@ -70,7 +70,7 @@ header('Content-Type: text/html; charset=UTF-8');
 
         <div class="header">
             Attribute
-            <div class="save"></div>
+            <input type="submit" value="" class="save">
         </div>
         <div class="content">
             <div class="row">
@@ -97,8 +97,8 @@ header('Content-Type: text/html; charset=UTF-8');
 
         <div class="header">
             Zugriffsrechte
-            <div class="add"></div>
-            <div class="save"></div>
+            <input type="button" class="add">
+            <input type="submit" value="" class="save">
         </div>
         <div class="content">
             <div class="row template">

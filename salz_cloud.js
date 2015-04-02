@@ -44,7 +44,8 @@ $(function() {
         details.find('.close').on('click', function(){closePopup("details-visible")});
         details.find('form[name=attributes]').submit('click', function(event) {uploadFile(); return false;});
         details.find('form[name=attributes] .save').on('click', function(event) {$(event.target).submit();});
-        details.find('form[name=access-rights] .save').on('click', function(event) {console.log('UPDATE RIGHTS'); updateRights(); return false;});
+        details.find('form[name=access-rights]').submit('click', function(event) {updateRights(); return false;});
+        details.find('form[name=access-rights] .save').on('click', function(event) {$(event.target).submit();});
         details.find('form[name=access-rights] .add').on('click', addRightsField);
 
         // load root folder
@@ -118,6 +119,7 @@ $(function() {
 
     // shows details to the passed file
     function showFile(event) {
+        details.removeClass('new-file');
         addPopup('details-visible');
 
         loading(true);

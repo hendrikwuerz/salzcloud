@@ -228,15 +228,16 @@ html.upload-visible #overlay {
     display: inline-block;
     cursor: pointer;
     margin-left: 5px;
-    height: 1em;
-    width: 1em;
+    height: 1.3em;
+    width: 1.3em;
+    border: 0;
     vertical-align: middle;
 }
 #details.block form .add {
-    background: url("img/add.svg") no-repeat scroll center / 1em auto rgba(0, 0, 0, 0);
+    background: url("img/add.svg") no-repeat scroll center / 1.3em auto rgba(0, 0, 0, 0);
 }
 #details.block form .save {
-    background: url("img/save.svg") no-repeat scroll left center / 1em auto rgba(0, 0, 0, 0);
+    background: url("img/save.svg") no-repeat scroll left center / 1.3em auto rgba(0, 0, 0, 0);
 }
 #details.block form .remove {
     background: url("img/remove.svg") no-repeat scroll center top / 100% auto rgba(0, 0, 0, 0);

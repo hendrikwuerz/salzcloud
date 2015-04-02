@@ -153,6 +153,10 @@ class CloudAPI {
             header('HTTP/1.0 400 Internal Server Error');
             echo new ErrorMessage(400, 'Internal Server Error', 'Your uploaded file could not be saved.');
         }
+
+        // allow hot-link for public files
+        Util::set_chmod($id, Util::has_read_access($id, 'file', User::get_default_user()));
+
     }
 
     /**
@@ -308,19 +312,7 @@ class CloudAPI {
 
             // allow hot-link for public files
             if($type == 'file' && $loop_user == 1) {
-                $pathname = "./uploads/$id";
-                if( $loop_access == "read" || $loop_access == "write" || $loop_access == "admin" ) {
-                    $file_mode = 0644;
-                    $folder_mode = 0755;
-                } else { // $access == '' -> delete access
-                    $file_mode = 0640;
-                    $folder_mode = 0700;
-                }
-                chmod($pathname, $folder_mode);
-                $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($pathname));
-                foreach($iterator as $item) {
-                    if($item != "." && $item != ".." && !is_dir($item)) chmod($item, $file_mode);
-                }
+                Util::set_chmod($id, ( $loop_access == "read" || $loop_access == "write" || $loop_access == "admin" ));
             }
 
             // Only set access rights for other user NEVER for the requester
@@ -437,17 +429,17 @@ class Util {
         $replaced = array("_", "_", "ae", "oe", "ue", "Ae;", "Oe", "Ue", "ss", "_", "_", "_Euro", "1", "2", "3");
         return str_replace($first, $replaced, $prefix.$file);
     }
-    static function has_admin_access($elem, $type = 'file') {
-        return Util::has_access($elem, 'admin', $type);
+    static function has_admin_access($elem, $type = 'file', $current_user = null) {
+        return Util::has_access($elem, 'admin', $type, $current_user);
     }
-    static function has_write_access($elem, $type = 'file') {
-        return Util::has_access($elem, 'write', $type);
+    static function has_write_access($elem, $type = 'file', $current_user = null) {
+        return Util::has_access($elem, 'write', $type, $current_user);
     }
-    static function has_read_access($elem, $type = 'file') {
-        return Util::has_access($elem, 'read', $type);
+    static function has_read_access($elem, $type = 'file', $current_user = null) {
+        return Util::has_access($elem, 'read', $type, $current_user);
     }
-    private static function has_access($elem, $access, $type = 'file') {
-        $found_access = Util::get_access($elem, $type);
+    private static function has_access($elem, $access, $type = 'file', $current_user = null) {
+        $found_access = Util::get_access($elem, $type, $current_user);
         //echo 'Found access: '.$found_access.' requested access: '.$access;
         if($access == 'admin' && $found_access == 'admin') return true;
         if($access == 'write' && ($found_access == 'admin' || $found_access == 'write')) return true;
@@ -455,9 +447,10 @@ class Util {
 
         return false;
     }
-    public static function get_access($elem, $type = 'file') {
+    public static function get_access($elem, $type = 'file', $current_user = null) {
         $mysqli = System::connect('cloud');
-        $current_user = System::getCurrentUser();
+
+        if($current_user == null) $current_user = System::getCurrentUser();
 
         // check admin
         if($current_user->admin) return 'admin';
@@ -486,6 +479,26 @@ class Util {
         return $highest_access_right;
     }
 
+    /**
+     * Allows or disables hot link access for public folders
+     * @param int $id
+     * @param boolean $public
+     */
+    public static function set_chmod($id, $public) {
+        $pathname = Util::$uploadDir."/$id";
+        if($public) {
+            $file_mode = 0644;
+            $folder_mode = 0755;
+        } else {
+            $file_mode = 0640;
+            $folder_mode = 0700;
+        }
+        chmod($pathname, $folder_mode);
+        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($pathname));
+        foreach($iterator as $item) {
+            if($item != "." && $item != ".." && !is_dir($item)) chmod($item, $file_mode);
+        }
+    }
 }
 
 class ErrorMessage {
