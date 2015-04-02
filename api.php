@@ -4,6 +4,16 @@ require_once($_SERVER['DOCUMENT_ROOT']."/system/global.inc.php");
 
 
 class CloudAPI {
+
+    /**
+     * Return the current user that is using the system
+     * @echo A JSON String with the current user
+     * TODO: Add example
+     */
+    static function getCurrentUser() {
+        echo System::getCurrentUser()->get_json();
+    }
+
     /**
      * Return the requested file
      * @param int $id (int)
@@ -84,6 +94,65 @@ class CloudAPI {
         $mysqli = System::connect('cloud');
         $current_user = System::getCurrentUser();
 
+        $type = $mysqli->real_escape_string($file['type']);
+        $filename = Util::get_filename_for($file['name']);
+
+        if($id == null || $id == '') { // new file
+
+            //Register File in DB
+            $sql = "INSERT INTO files
+            (id, title, type, filename, folder)
+            VALUES
+            (NULL, '', '$type', '$filename', 1)";
+            $mysqli->query($sql);
+            $id = $mysqli->insert_id;
+            mkdir(Util::$uploadDir."/$id", 0700);
+
+            // add access right for uploader
+            $sql = "INSERT INTO rights
+                    (access, user_id, data_type, data_id)
+                    VALUES
+                    ('admin', '".$current_user->id."', 'file', '$id')";
+            $mysqli->query($sql);
+
+        } else { // update existing file
+
+            // Check write access
+            if(!Util::has_write_access($id, 'file')) {
+                header('HTTP/1.0 403 Forbidden');
+                echo (new ErrorMessage(403, 'Forbidden', 'You do not have write access to the requested file-ID.'));
+                die;
+            }
+
+            // Delete actual files
+            $existing_files = glob(Util::$uploadDir."/$id/*"); // get all file names
+            foreach($existing_files as $deletable_file){ // iterate files
+                if(is_file($deletable_file)) unlink($deletable_file); // delete file
+            }
+
+        }
+
+        // save scaled versions if it is an image
+        $image_type = exif_imagetype($file['tmp_name']);
+        // $image_type is false if this is not an image
+        if($image_type && ($image_type == IMAGETYPE_JPEG || $image_type == IMAGETYPE_GIF || $image_type == IMAGETYPE_PNG)) {
+            include_once("SimpleImage.php");
+            $image = new SimpleImage();
+            $image->load($file['tmp_name']);
+            $image->resizeToWidth(400);
+            $image->save(Util::$uploadDir."/$id/400width_$filename");
+            $image->resizeToWidth(100);
+            $image->save(Util::$uploadDir."/$id/100width_$filename");
+        }
+
+        // Save original file
+        if(move_uploaded_file($file['tmp_name'], Util::$uploadDir."/$id/$filename")) {
+            header('HTTP/1.0 200 OK');
+            echo json_encode(array('id' => $id));
+        } else {
+            header('HTTP/1.0 400 Internal Server Error');
+            echo new ErrorMessage(400, 'Internal Server Error', 'Your uploaded file could not be saved.');
+        }
     }
 
     /**
@@ -95,8 +164,28 @@ class CloudAPI {
      */
     static function getFileAttributes($id) {
         $mysqli = System::connect('cloud');
-        $current_user = System::getCurrentUser();
 
+        // check read access
+        if(!Util::has_read_access('file', $id)) {
+            header('HTTP/1.0 403 Forbidden');
+            echo new ErrorMessage(403, 'Forbidden', 'You have no read access to the requested file.');
+            exit;
+        }
+
+        // get data
+        $sql = "SELECT files.id, files.title, files.type, files.filename, files.folder
+                FROM files
+                WHERE files.id = $id";
+        if($result = $mysqli->query($sql)) {
+            while($r = $result->fetch_assoc()) {
+                $r['data_type'] = 'file';
+                $r['hotlink'] = 'http://cloud.salzhimmel.de/uploads/'.$r['id'].'/'.$r['filename'];
+                $data[] = $r;
+            }
+        }
+
+        //Print result
+        echo json_encode($data);
     }
 
     /**
@@ -110,7 +199,23 @@ class CloudAPI {
      */
     static function setFileAttributes($id, $title) {
         $mysqli = System::connect('cloud');
-        $current_user = System::getCurrentUser();
+
+        // check write access
+        if(!Util::has_write_access($id, 'file')) {
+            header('HTTP/1.0 403 Forbidden');
+            echo new ErrorMessage(403, 'Forbidden', 'You have no write access to the requested file.');
+            exit;
+        }
+
+        // update attributes
+        $sql = "UPDATE files SET title = '$title' WHERE id = $id";
+        if($mysqli->query($sql)) {
+            echo new SuccessMessage('Attributes changed');
+        } else {
+            header('HTTP/1.0 400 Internal Server Error');
+            echo new ErrorMessage(400, 'Internal Server Error', 'Attributes could not be set because of a SQL-Error');
+        }
+
     }
 
     /**
@@ -175,6 +280,99 @@ class CloudAPI {
      *          A JSON String whether the update was successful
      */
     static function setRights($id, $user, $access, $type = 'file') {
+        $mysqli = System::connect('cloud');
+        $current_user = System::getCurrentUser();
+
+        // check var
+        // TODO: Move to api call function (bottom)
+        if(! (isset($type) && isset($id) && isset($user) && isset($access)) ) {
+            header('HTTP/1.0 400 Bad Request');
+            echo new ErrorMessage(400, 'Bad Request', 'All attributes have to be filled in');
+        }
+
+        $type = $mysqli->real_escape_string($type);
+        $id = $mysqli->real_escape_string($id);
+
+        // check admin access
+        if(!Util::has_admin_access($id, $type)) {
+            header('HTTP/1.0 403 Forbidden');
+            echo "Forbidden";
+            exit;
+        }
+
+        // loop all set access rights
+        for($i = 0; $i < count($user); $i++) {
+            $loop_user = $mysqli->real_escape_string($user[$i]);
+            $loop_access = $mysqli->real_escape_string($access[$i]);
+
+            // allow hot-link for public files
+            if($type == 'file' && $loop_user == 1) {
+                $pathname = "./uploads/$id";
+                if( $loop_access == "read" || $loop_access == "write" || $loop_access == "admin" ) {
+                    $file_mode = 0644;
+                    $folder_mode = 0755;
+                } else { // $access == '' -> delete access
+                    $file_mode = 0640;
+                    $folder_mode = 0700;
+                }
+                chmod($pathname, $folder_mode);
+                $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($pathname));
+                foreach($iterator as $item) {
+                    if($item != "." && $item != ".." && !is_dir($item)) chmod($item, $file_mode);
+                }
+            }
+
+            // Only set access rights for other user NEVER for the requester
+            if($loop_user != '' && $loop_user != $current_user->id) { // only use data with a user id
+                // check for remove right
+                if($loop_access == '') {
+                    $sql = "DELETE FROM rights
+                    WHERE
+                      rights.user_id = $loop_user AND
+                      rights.data_type LIKE '$type' AND
+                      rights.data_id = $id";
+                    $mysqli->query($sql);
+
+
+                } else { // Give user a right
+                    $insert_new_row = true;
+
+                    // check for existing entry
+                    $sql = "SELECT rights.id, rights.access, rights.user_id, rights.data_type, rights.data_id
+                    FROM rights
+                    WHERE
+                      rights.user_id = $loop_user AND
+                      rights.data_type LIKE '$type' AND
+                      rights.data_id = $id";
+                    if($result = $mysqli->query($sql)) {
+                        if($result->num_rows != 0) { // update existing right
+                            $insert_new_row = false;
+                            $row = $result->fetch_assoc();
+                            if($row['access'] != $loop_access) { // changed current access right
+                                $access_id = $row['id'];
+                                $sql = "UPDATE rights
+                                    SET access = '$loop_access'
+                                    WHERE id = $access_id";
+                                $mysqli->query($sql);
+                            }
+                        }
+                    }
+
+                    // have to insert a new row
+                    if($insert_new_row) {
+                        $sql = "INSERT INTO rights
+                    (access, user_id, data_type, data_id)
+                    VALUES
+                    ('$loop_access', '$loop_user', '$type', '$id')";
+                        $mysqli->query($sql);
+                    } // insert new row
+                } // delete or set
+            } // skip data with no user id
+
+        } // end loop all rights
+
+        header('HTTP/1.0 200 OK');
+        echo new SuccessMessage('Rights have been updated');
     }
 
     /**
@@ -224,6 +422,20 @@ class CloudAPI {
 }
 
 class Util {
+
+    static $uploadDir = './uploads';
+
+    /**
+     * get a filename for the passed file which can be used to store it.
+     * @param $file : The original filename
+     * @param string $prefix: A possible prefix of the file
+     * @return string: The new filename to be used
+     */
+    static function get_filename_for($file, $prefix = '') {
+        $first = array(" ", "&", "ä", "ö", "ü", "Ä", "Ö", "Ü", "ß", "<", ">", "€", "¹", "²", "³");
+        $replaced = array("_", "_", "ae", "oe", "ue", "Ae;", "Oe", "Ue", "ss", "_", "_", "_Euro", "1", "2", "3");
+        return str_replace($first, $replaced, $prefix.$file);
+    }
     static function has_admin_access($elem, $type = 'file') {
         return Util::has_access($elem, 'admin', $type);
     }
@@ -235,6 +447,7 @@ class Util {
     }
     private static function has_access($elem, $access, $type = 'file') {
         $found_access = Util::get_access($elem, $type);
+        //echo 'Found access: '.$found_access.' requested access: '.$access;
         if($access == 'admin' && $found_access == 'admin') return true;
         if($access == 'write' && ($found_access == 'admin' || $found_access == 'write')) return true;
         if($access == 'read' && ($found_access == 'admin' || $found_access == 'write' || $found_access == 'read')) return true;
@@ -275,22 +488,46 @@ class Util {
 }
 
 class ErrorMessage {
+    private $code;
     private $status;
     private $message;
-    private $reason;
 
-    function __construct($status, $message, $reason) {
+    function __construct($code, $status, $message) {
+        $this->code = $code;
         $this->status = $status;
         $this->message = $message;
-        $this->reason = $reason;
     }
 
     function getArray() {
-        return array('error' => array('status' => $this->status, 'message' => $this->message, 'reason' => $this->reason));
+        return array('error' => array('code' => $this->code, 'status' => $this->status, 'message' => $this->message));
     }
 
     function getJSON() {
         return json_encode($this->getArray());
+    }
+
+    function __toString() {
+        return $this->getJSON();
+    }
+}
+
+class SuccessMessage {
+    private $message;
+
+    function __construct($message) {
+        $this->message = $message;
+    }
+
+    function getArray() {
+        return array('success' => array('code' => 200, 'status' => 'OK', 'message' => $this->message));
+    }
+
+    function getJSON() {
+        return json_encode($this->getArray());
+    }
+
+    function __toString() {
+        return $this->getJSON();
     }
 }
 
@@ -798,20 +1035,30 @@ else if($_GET['q'] == 'set_file') set_file(); // updates the image and saves att
 else if($_GET['q'] == 'current_user') current_user(); // gets the current user
 else if($_GET['q'] == 'get_access') echo get_access($_GET['v'], $_GET['w']); // gets the access of the requester for the passed type and element
 */
-else if($_GET['q'] == 'get_file') { // gets the uploaded file with the passed ID and the wished width
-    CloudAPI::getFile($_GET['v'], (isset($_GET['w']) ? array('width'=>$_GET['w']) : array()));
-} else if($_GET['q'] == 'set_file') { // gets the uploaded file with the passed ID and the wished width
-    CloudAPI::setFile(null);
+else if($_GET['q'] == 'get_current_user') { // list the content of the folder with the passed ID
+    CloudAPI::getCurrentUser();
+
+} else if($_GET['q'] == 'get_file') { // gets the uploaded file with the passed ID and the wished width
+    CloudAPI::getFile($_GET['id'], (isset($_GET['w']) ? array('width'=>$_GET['w']) : array()));
+
+} else if($_GET['q'] == 'set_file') { // sets the uploaded file for the passed ID
+    CloudAPI::setFile($_FILES[0], $_POST['id']);
+
 } else if($_GET['q'] == 'get_file_attributes') { // get the attributes of a file
     CloudAPI::getFileAttributes($_GET['v']);
+
 } else if($_GET['q'] == 'set_file_attributes') { // set the attributes of a file
     CloudAPI::setFileAttributes($_GET['v'], $_GET['w']);
-} else if($_GET['q'] == 'get_access') { // get the access of the current user
+
+} else if($_GET['q'] == 'get_access') { // get the access of the current user for the passed element
     CloudAPI::getAccess($_GET['v'], $_GET['w']);
+
 } else if($_GET['q'] == 'get_rights') { // get the access rights of the file with the passed ID
     CloudAPI::getRights($_GET['v'], $_GET['w']);
+
 } else if($_GET['q'] == 'set_rights') { // set the access rights of the file with the passed ID
-    CloudAPI::setRights($_GET['v'], $_POST['user'], $_POST['access']);
-} else if($_GET['q'] == 'get_folder') { // set the access rights of the file with the passed ID
+    CloudAPI::setRights($_POST['id'], $_POST['user'], $_POST['access']);
+
+} else if($_GET['q'] == 'get_folder') { // list the content of the folder with the passed ID
     CloudAPI::getFolder($_GET['v']);
 }

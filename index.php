@@ -66,7 +66,7 @@ header('Content-Type: text/html; charset=UTF-8');
 
     <form action="#" method="" name="attributes">
         <input type="hidden" name="type">
-        <input type="hidden" name="elem">
+        <input type="hidden" name="id">
 
         <div class="header">
             Attribute
@@ -93,7 +93,7 @@ header('Content-Type: text/html; charset=UTF-8');
     </form>
     <form action="#" method="" name="access-rights">
         <input type="hidden" name="type">
-        <input type="hidden" name="elem">
+        <input type="hidden" name="id">
 
         <div class="header">
             Zugriffsrechte

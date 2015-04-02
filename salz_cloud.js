@@ -27,15 +27,12 @@ $(function() {
         storage.waitStack = 0; // how many wait requests are active
 
         // get current user
-        $.ajax({
-            url: 'api.php?q=current_user',
-            type: 'GET',
-            dataType: 'json'
-        }).done(function(data) {
-            storage.current_user = data;
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            storage.current_user = {id:1, name:"anonymous", admin:"false"};
-        });
+        api.get_current_user()
+            .done(function(data) {
+                storage.current_user = data;
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                storage.current_user = {id:1, name:"anonymous", admin:"false"};
+            });
 
         // register listener
         overlay.on('click', function(){closePopup()});
@@ -45,7 +42,7 @@ $(function() {
         menu.find('.upload').on('click', newFile);
         details.find('input[type=file]').on('change', function(event) {storage.selectedFiles = event.target.files;});
         details.find('.close').on('click', function(){closePopup("details-visible")});
-        details.find('form[name=attributes]').submit('click', function(event) {uploadFileData(); return false;});
+        details.find('form[name=attributes]').submit('click', function(event) {uploadFile(); return false;});
         details.find('form[name=attributes] .save').on('click', function(event) {$(event.target).submit();});
         details.find('form[name=access-rights] .save').on('click', function(event) {console.log('UPDATE RIGHTS'); updateRights(); return false;});
         details.find('form[name=access-rights] .add').on('click', addRightsField);
@@ -71,11 +68,10 @@ $(function() {
     // or reloads current folder if no value is passed
     function get_folder(id) {
         if(id == undefined) id = storage.current_folder;
-        $.get( "api.php?q=get_folder&v=" + id, function( data ) {
+        api.get_folder(id).done(function( data ) {
             //console.log( data );
             storage.jq_files.html(""); // remove old elements
-            var obj = jQuery.parseJSON( data );
-            $.each(obj, function(index, elem) {
+            $.each(data, function(index, elem) {
                 var keys = Object.keys(elem);
                 var data = "";
                 $.each(keys, function(index, value) {
@@ -132,8 +128,8 @@ $(function() {
         details.find('h2').html( elem.attr('data-type') == 'folder' ? elem.attr('data-name') : elem.attr('data-title') );
         details.find('.hotlink a').attr('href', elem.attr('data-hotlink') );
         details.find('.hotlink a').html(elem.attr('data-hotlink') );
-        details.find('.api-link a').attr('href', "http://cloud.salzhimmel.de/api.php?q=get_file&v=" + elem.attr('data-id') );
-        details.find('.api-link a').html("http://cloud.salzhimmel.de/api.php?q=get_file&v=" + elem.attr('data-id') );
+        details.find('.api-link a').attr('href', api.get_file(elem.attr('data-id')) );
+        details.find('.api-link a').html(api.get_file(elem.attr('data-id')));
         var img = details.find('img');
         var type = elem.attr('data-type');
         if(type.length > 'image'.length && type.slice(0, 'image'.length) == 'image') { // file is an image -> display
@@ -145,7 +141,7 @@ $(function() {
             // than display real image
             img.attr('title', elem.attr('data-title'));
             img.attr('alt', elem.attr('data-title'));
-            img.attr('src', 'api.php?q=get_file&v=' + elem.attr('data-id') + '&w=400&t=' + new Date().getTime());
+            img.attr('src', api.get_file(elem.attr('data-id'), {width: 400, t: new Date().getTime()}));
         } else {
             details.removeClass('image');
         }
@@ -154,9 +150,9 @@ $(function() {
         var admin = false;
         var write = false;
         var read = false;
-        $.get( "api.php?q=get_access&v=" + elem.attr('data-id') + "&w=" + elem.attr('data-data_type') )
+        api.get_access(elem.attr('data-id'))
             .done(function(data) {
-                var access = jQuery.parseJSON( data )['access'];
+                var access = data['access'];
                 // set vars for access rights
                 if(access == 'admin') {
                     admin = write = read = true;
@@ -175,7 +171,7 @@ $(function() {
                     attribute_form.find('input[name=elem]').val(elem.attr('data-id'));
                     attribute_form.find('input[name=title]').val( elem.attr('data-title') );
                     attribute_form.css('display', 'block');
-                } else {
+                } else { // no write rights
                     attribute_form.css('display', 'none');
                 }
 
@@ -190,29 +186,29 @@ $(function() {
 
                     // set current type ('file') and element ID
                     access_form.find('input[name=type]').val(elem.attr('data-data_type'));
-                    access_form.find('input[name=elem]').val(elem.attr('data-id'));
+                    access_form.find('input[name=id]').val(elem.attr('data-id'));
 
                     // display new access rights
-                    $.get( "api.php?q=get_rights&v=" + elem.attr('data-id') + "&w=" + elem.attr('data-data_type'), function( data ) {
-                        var obj = jQuery.parseJSON( data );
-                        $.each(obj, function(index, elem) {
-                            if(elem['user_id'] != storage.current_user.id) {
-                                var row = row_template.clone();
-                                row.removeClass('template');
-                                row.find("input[name='user[]']").val(elem['user_id']);
-                                row.find("input[name='access[]']").val(elem['access']);
-                                access_form.find('div.content').append(row);
-                            }
+                    api.get_rights(elem.attr('data-id'))
+                        .done(function( data ) {
+                            $.each(data, function(index, elem) {
+                                if(elem['user_id'] != storage.current_user.id) {
+                                    var row = row_template.clone();
+                                    row.removeClass('template');
+                                    row.find("input[name='user[]']").val(elem['user_id']);
+                                    row.find("input[name='access[]']").val(elem['access']);
+                                    access_form.find('div.content').append(row);
+                                }
+                            });
+
+                            // add remove row callback
+                            access_form.find('.row .remove').on('click', removeRightsField);
+                        })
+                        .always(function() {
+                            access_form.removeClass('loading');
                         });
-
-                        // add remove row callback
-                        access_form.find('.row .remove').on('click', removeRightsField);
-                    }).always(function() {
-                        access_form.removeClass('loading');
-                    });
-
                     access_form.css('display', 'block');
-                } else {
+                } else { // no admin rights
                     access_form.css('display', 'none');
                 }
                 loading(false);
@@ -246,71 +242,82 @@ $(function() {
 
     // uploads the files filled in in the upload form
     // and the set title for it
-    function uploadFileData() {
+    function uploadFile() {
 
         loading(true);
+
+        // how to end upload process
+        var always = function() {
+            storage.selectedFiles = [];
+            closePopup('upload-visible');
+            get_folder();
+            loading(false);
+        };
 
         // remove focus from from so ENTER will not submit it again
         $(window).focus();
 
-        // Create a formdata object and add the files
-        var data = new FormData();
-        data.append('type', details.find('input[name=type]').val()); // type -> 'file'
-        data.append('elem', details.find('input[name=elem]').val()); // ID if updating else ''
-        data.append('title', details.find('input[name=title]').val()); // file title
-        $.each(storage.selectedFiles, function(key, value) {
-            data.append(key, value);
-        });
+        // file ID - will be changed after uploading a file
+        var file_id = details.find('input[name=elem]').val(); // ID if updating else ''
 
-        console.log('data: ' + data);
+        // upload a file
+        if(storage.selectedFiles.length > 0) {
+            var errors = false;
+            api.set_file(file_id, storage.selectedFiles)
+                .done(function( data ) {
+                    if(file_id != '') { // uploaded a new image -> refresh
+                        details.find('img').attr('src', api.get_file(file_id, {width: 400, t: new Date().getTime()}));
+                    }
+                    file_id = data.id; // Save file ID (possible new file)
 
-        $.ajax({
-            url: 'api.php?q=set_file',
-            type: 'POST',
-            data: data,
-            cache: false,
-            dataType: 'html',
-            processData: false, // Don't process the files
-            contentType: false // Set content type to false as jQuery will tell the server its a query string request
-        }).done(function(data, textStatus, jqXHR) {
-            if(data.error === undefined) { // Success
-                showSuccess('Gespeichert', 'Die Daten wurden erfolgreich gespeichert.');
-                if(storage.selectedFiles != [] && details.find('input[name=elem]').val() != '') { // uploaded a new image -> refresh
-                    details.find('img').attr('src', 'api.php?q=download&v=' + details.find('input[name=elem]').val() + '&w=400&t=' + new Date().getTime());
-                }
-                closePopup("details-visible");
-            } else { // Server-side error
-                console.log('Server-Side UPLOAD ERROR: ' + data.error);
-                showError('Fehler', 'Die Daten konnten wegen einem Server-Fehler nicht gespeichert werden');
-            }
-            closePopup('upload-visible');
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            console.log('JQuery UPLOAD ERROR: ' + textStatus);
-            showError('Fehler', 'JQuery konnte den Upload-Vorgang nicht ausführen<br>' + textStatus);
-        }).always(function() {
-            storage.selectedFiles = [];
+                    // set attributes
+                    api.set_file_attributes(file_id, details.find('input[name=title]').val())
+                        .fail(function(jqXHR, textStatus, errorThrown) {
+                            console.log('JQuery UPLOAD ERROR: ' + textStatus);
+                            errors = true;
+                        });
+                })
+                .fail(function(jqXHR, textStatus, errorThrown) {
+                    console.log('JQuery UPLOAD ERROR: ' + textStatus);
+                    errors = true;
+                }).always(function() {
+                    if(errors) showError('Fehler', 'Die Daten konnten nicht gespeichert werden');
+                    else showSuccess('Gespeichert', 'Die Daten wurden gespeichert');
+                    always();
+                });
+
+        } else if(file_id != '') { // only update attributes of existing file
+            // set attributes
+            api.set_file_attributes(file_id, details.find('input[name=title]').val())
+                .done(function( data ) {
+                    showSuccess('Gespeichert', 'Die Dateiattribute wurden gespeichert');
+                })
+                .fail(function(jqXHR, textStatus, errorThrown) {
+                    console.log('JQuery UPLOAD ERROR: ' + textStatus);
+                    showError('Fehler', 'Die Dateiattribute konnten nicht gespeichert werden');
+                }).always(always);
+
+        } else { // Upload new file without selecting a file
             loading(false);
-            get_folder();
-        });
+            showError('Fehler', 'Um eine neue Datei hoch zu laden, wählen sie eine aus.');
+        }
     }
 
     function updateRights() {
         loading(true);
-        $.ajax({
-            url: 'api.php?q=set_rights',
-            type: 'POST',
-            data: details.find('form[name=access-rights]').serialize(),
-            dataType: 'html'
-        }).done(function(data, textStatus, jqXHR) {
-            console.log('Rights were set correctly');
-            showSuccess('Gespeichert', 'Die Rechte wurden erfolgreich gesetzt');
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            console.log('Rights could not be set correctly ' + textStatus);
-            console.log(errorThrown);
-            showError('Fehler', 'Die Rechte konnten nicht gesetzt werden. Der Server hat die Anfrage nicht ausgeführt.');
-        }).always(function() {
-            loading(false);
-        });
+        api.set_rights(details.find('form[name=access-rights]').serialize())
+            .done(function(data, textStatus, jqXHR) {
+                console.log('Rights were set correctly');
+                showSuccess('Gespeichert', 'Die Rechte wurden erfolgreich gesetzt');
+            })
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                console.log('Rights could not be set correctly ' + textStatus);
+                console.log(errorThrown);
+                showError('Fehler', 'Die Rechte konnten nicht gesetzt werden. Der Server hat die Anfrage nicht ausgeführt.');
+            })
+            .always(function() {
+                loading(false);
+            });
     }
 
     function showSuccess(title, content, time) {
@@ -381,6 +388,88 @@ $(function() {
             storage.freezePopups = true;
         }
     }
+
+    var api = {
+        get_current_user: function() {
+            return $.ajax({
+                url: 'api.php?q=get_current_user',
+                type: 'GET',
+                dataType: 'json'
+            });
+        },
+
+        get_file: function (id, options) {
+            var final = [];
+            final['w'] = options;
+            return 'http://cloud.salzhimmel.de/api.php?q=get_file&id=' + id + "&" + $.param(final)
+        },
+
+        set_file: function (id, selected_files) {
+            var file_data = new FormData();
+            file_data.append('id', id);
+            $.each(selected_files, function (key, value) {
+                file_data.append(key, value);
+            });
+            return $.ajax({
+                url: 'api.php?q=set_file',
+                type: 'POST',
+                data: file_data,
+                cache: false,
+                dataType: 'json',
+                processData: false, // Don't process the files
+                contentType: false // Set content type to false as jQuery will tell the server its a query string request
+            })
+        },
+
+        get_file_attributes: function (id) {
+            return $.ajax({
+                url: 'api.php?q=get_file_attributes&v=' + id,
+                type: 'GET',
+                dataType: 'json'
+            });
+        },
+
+        set_file_attributes: function (id, title) {
+            return $.ajax({
+                url: 'api.php?q=set_file_attributes&v=' + id + '&w=' + title,
+                type: 'POST',
+                dataType: 'json'
+            });
+        },
+
+        get_access: function (id) {
+            return $.ajax({
+                url: 'api.php?q=get_access&v=' + id + '&w=file',
+                type: 'GET',
+                dataType: 'json'
+            });
+        },
+
+        get_rights: function (id) {
+            return $.ajax({
+                url: 'api.php?q=get_rights&v=' + id + '&w=file',
+                type: 'GET',
+                dataType: 'json'
+            });
+        },
+
+        set_rights: function (data) {
+            return $.ajax({
+                url: 'api.php?q=set_rights',
+                type: 'POST',
+                data: data,
+                dataType: 'json'
+            });
+        },
+
+        get_folder: function (folder) {
+            return $.ajax({
+                url: 'api.php?q=get_folder&v=' + folder,
+                type: 'GET',
+                dataType: 'json'
+            });
+        }
+    };
 
     init();
 
