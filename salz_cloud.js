@@ -43,9 +43,7 @@ $(function() {
         details.find('input[type=file]').on('change', function(event) {storage.selectedFiles = event.target.files;});
         details.find('.close').on('click', function(){closePopup("details-visible")});
         details.find('form[name=attributes]').submit('click', function(event) {uploadFile(); return false;});
-        details.find('form[name=attributes] .save').on('click', function(event) {$(event.target).submit();});
         details.find('form[name=access-rights]').submit('click', function(event) {updateRights(); return false;});
-        details.find('form[name=access-rights] .save').on('click', function(event) {$(event.target).submit();});
         details.find('form[name=access-rights] .add').on('click', addRightsField);
 
         // load root folder
@@ -232,19 +230,16 @@ $(function() {
      */
     function removeRightsField(event) {
         var row = $(event.target).parent();
-        var user = row.find("input[name='user[]']").val();
-        if(user == '' || user == storage.current_user.id) { // no need to update anything
-            row.remove();
-        } else { // delete rights of the user
-            row.find("input[name='access[]']").val('');
-            row.css('display', 'none');
-        }
+        row.remove();
     }
 
 
     // uploads the files filled in in the upload form
     // and the set title for it
     function uploadFile() {
+
+        // remove focus from from so ENTER will not submit it again
+        document.activeElement.blur();
 
         loading(true);
 
@@ -255,9 +250,6 @@ $(function() {
             get_folder();
             loading(false);
         };
-
-        // remove focus from from so ENTER will not submit it again
-        $(window).focus();
 
         // file ID - will be changed after uploading a file
         var file_id = details.find('input[name=id]').val(); // ID if updating else ''
@@ -308,10 +300,13 @@ $(function() {
     }
 
     function updateRights() {
+
+        // remove focus from from so ENTER will not submit it again
+        document.activeElement.blur();
+
         loading(true);
         api.set_rights(details.find('form[name=access-rights]').serialize())
             .done(function(data, textStatus, jqXHR) {
-                console.log('Rights were set correctly');
                 showSuccess('Gespeichert', 'Die Rechte wurden erfolgreich gesetzt');
             })
             .fail(function(jqXHR, textStatus, errorThrown) {
@@ -403,9 +398,11 @@ $(function() {
         },
 
         get_file: function (id, options) {
-            var final = [];
-            final['w'] = options;
-            return 'http://cloud.salzhimmel.de/api.php?q=get_file&id=' + id + "&" + $.param(final)
+            var final = 'http://cloud.salzhimmel.de/api.php?q=get_file&id=' + id;
+            if(options != undefined && options != null && options != {})
+                final += "&" + $.param(options);
+
+            return final;
         },
 
         set_file: function (id, selected_files) {

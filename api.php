@@ -305,6 +305,10 @@ class CloudAPI {
             exit;
         }
 
+        // remove all current access rights
+        $sql = "DELETE FROM rights WHERE data_type='$type' AND data_id=$id AND user_id != ".$current_user->id;
+        $mysqli->query($sql);
+
         // loop all set access rights
         for($i = 0; $i < count($user); $i++) {
             $loop_user = $mysqli->real_escape_string($user[$i]);
@@ -316,51 +320,13 @@ class CloudAPI {
             }
 
             // Only set access rights for other user NEVER for the requester
-            if($loop_user != '' && $loop_user != $current_user->id) { // only use data with a user id
-                // check for remove right
-                if($loop_access == '') {
-                    $sql = "DELETE FROM rights
-                    WHERE
-                      rights.user_id = $loop_user AND
-                      rights.data_type LIKE '$type' AND
-                      rights.data_id = $id";
-                    $mysqli->query($sql);
-
-
-                } else { // Give user a right
-                    $insert_new_row = true;
-
-                    // check for existing entry
-                    $sql = "SELECT rights.id, rights.access, rights.user_id, rights.data_type, rights.data_id
-                    FROM rights
-                    WHERE
-                      rights.user_id = $loop_user AND
-                      rights.data_type LIKE '$type' AND
-                      rights.data_id = $id";
-                    if($result = $mysqli->query($sql)) {
-                        if($result->num_rows != 0) { // update existing right
-                            $insert_new_row = false;
-                            $row = $result->fetch_assoc();
-                            if($row['access'] != $loop_access) { // changed current access right
-                                $access_id = $row['id'];
-                                $sql = "UPDATE rights
-                                    SET access = '$loop_access'
-                                    WHERE id = $access_id";
-                                $mysqli->query($sql);
-                            }
-                        }
-                    }
-
-                    // have to insert a new row
-                    if($insert_new_row) {
-                        $sql = "INSERT INTO rights
+            if($loop_user != '' && $loop_access != '' && $loop_user != $current_user->id) { // only use data with a user id
+                $sql = "INSERT INTO rights
                     (access, user_id, data_type, data_id)
                     VALUES
                     ('$loop_access', '$loop_user', '$type', '$id')";
-                        $mysqli->query($sql);
-                    } // insert new row
-                } // delete or set
-            } // skip data with no user id
+                $mysqli->query($sql);
+            }
 
         } // end loop all rights
 
