@@ -125,7 +125,7 @@ header('Content-Type: text/html; charset=UTF-8');
 
 <div id="wait" class="block"><img src="img/wait.gif" alt="Bitte warten"></div>
 
-<div id="success" class="block"><h2></h2>
+<div id="success" class="block" tabindex="1"><h2></h2>
 
     <p></p></div>
 

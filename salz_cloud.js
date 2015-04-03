@@ -37,6 +37,7 @@ $(function() {
         // register listener
         overlay.on('click', function(){closePopup()});
         success.on('click', function(){closePopup('success-visible')});
+        success.on('keydown', function(e){if(e.keyCode == 13)closePopup('success-visible')});
         error.on('click', function(){closePopup('error-visible')});
         login.find('.close').on('click', function(){closePopup("login-visible")});
         menu.find('.upload').on('click', newFile);
@@ -375,6 +376,7 @@ $(function() {
         success.find('h2').html(title);
         success.find('p').html(content);
         addPopup('success-visible');
+        success.focus();
         setTimeout(function() {
             closePopup('success-visible');
         }, time);

@@ -261,8 +261,14 @@ class CloudAPI {
             }
         }
 
+        // check if something has to be updated
+        if(count($accepted_updates) < 1) {
+            header('HTTP/1.0 400 Bad Request');
+            echo new ErrorMessage(400, 'Bad Request', 'No accepted attributes were passed');
+        }
+
         // update attributes
-        $sql = "UPDATE files SET ".implode(", ", $accepted_updates)."WHERE id = $id";
+        $sql = "UPDATE files SET ".implode(", ", $accepted_updates)." WHERE id = $id";
         if($mysqli->query($sql)) {
             echo new SuccessMessage('Attributes changed');
         } else {
