@@ -404,9 +404,13 @@ class CloudAPI {
 
         if(Util::has_read_access($id, 'folder')) { // allowed to see this folder
             // fetch folders
-            $sql = "SELECT distinct folders.id, folders.name, folders.lft
+            /*$sql = "SELECT distinct folders.id, folders.name, folders.lft
                 FROM folders, (SELECT folders.lft as lft, folders.rgt as rgt FROM folders WHERE folders.id = $id) bounds
                 WHERE folders.lft between bounds.lft and bounds.rgt";
+            */
+            $sql = "SELECT distinct folders.id, folders.name
+                FROM folders
+                WHERE folders.parent = $id";
             if($result = $mysqli->query($sql)) {
                 while($r = $result->fetch_assoc()) {
                     $r['data_type'] = 'folder';
@@ -432,6 +436,35 @@ class CloudAPI {
 
         //Print result
         echo json_encode($data);
+    }
+
+    /**
+     * Get the ID of the parent folder from the folder with the passed ID
+     * @param int $id
+     *          The ID of the current folder
+     * @echo string
+     *          A JSON String with the ID of the parent folder
+     */
+    static function getParentFolder($id) {
+        $mysqli = System::connect('cloud');
+
+        $data = array();
+        $id = $mysqli->real_escape_string($id);
+
+        if(Util::has_read_access($id, 'folder')) { // allowed to see this folder
+            // fetch parent
+            $sql = "SELECT folders.parent
+                FROM folders
+                WHERE folders.id = $id";
+            $data = $mysqli->query($sql)->fetch_assoc();
+
+            //Print result
+            echo json_encode($data);
+        } else {
+            header('HTTP/1.0 403 Forbidden');
+            echo new ErrorMessage(403, 'Forbidden', 'You do not have read access to this folder. So you can no see its parent');
+        }
+
     }
 }
 
@@ -598,4 +631,12 @@ else if($_GET['q'] == 'get_current_user') { // list the content of the folder wi
 
 } else if($_GET['q'] == 'get_folder') { // list the content of the folder with the passed ID
     CloudAPI::getFolder($_GET['v']);
+
+} else if($_GET['q'] == 'get_parent_folder') { // get the ID of the parent-folder from the folder with the passed ID
+    CloudAPI::getParentFolder($_GET['id']);
+
+} else {
+    header('HTTP/1.0 418 I\'m a teapot');
+    echo new ErrorMessage(418, 'I\'m a teapot', 'You called an undefined function, so I - the teapot of this site - answered your request. Nice to meet you!');
+
 }

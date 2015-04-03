@@ -35,12 +35,16 @@ $(function() {
             });
 
         // register listener
+        menu.find('.folder-up').on('click', function(){folderUp()});
+        menu.find('.folder-new').on('click', function(){newFile()});
+        menu.find('.file-new').on('click', function(){newFile()});
+        menu.find('.reload').on('click', function(){get_folder()});
+
         overlay.on('click', function(){closePopup()});
         success.on('click', function(){closePopup('success-visible')});
         success.on('keydown', function(e){if(e.keyCode == 13)closePopup('success-visible')});
         error.on('click', function(){closePopup('error-visible')});
         login.find('.close').on('click', function(){closePopup("login-visible")});
-        menu.find('.file-new').on('click', newFile);
         details.find('input[type=file]').on('change', function(event) {storage.selectedFiles = event.target.files; var title_input = details.find("form[name=attributes] input[name=title]"); if(title_input.val() == '') title_input.val(event.target.files[0].name); console.log(event.target.files[0].name);});
         details.find('.close').on('click', function(){closePopup("details-visible")});
         details.find('form[name=attributes]').submit('click', function(event) {uploadFile(); return false;});
@@ -68,6 +72,8 @@ $(function() {
     // display the content of the folder with the passed id
     // or reloads current folder if no value is passed
     function get_folder(id) {
+        loading(true);
+
         if(id == undefined) id = storage.current_folder;
         storage.current_folder = id;
 
@@ -97,7 +103,10 @@ $(function() {
             })
             .fail(function(jqXHR, textStatus, errorThrown) {
                 console.error('The folder could not be loaded ' + textStatus);
-                showError('Fehler', 'Der Ordnerinhalt konnte nicht geladen werden.');
+                showError('Fehler', 'Der Ordnerinhalt konnte nicht geladen werden. Möglicherweise haben Sie keine Rechte');
+            })
+            .always(function() {
+                loading(false);
             });
     }
 
@@ -370,6 +379,26 @@ $(function() {
             });
     }
 
+    function folderUp() {
+        loading(true);
+        api.get_parent_folder()
+            .done(function(data, textStatus, jqXHR) {
+                if(data['parent'] > 0) {
+                    get_folder(data['parent'])
+                } else {
+                    console.log('Received non valid folder ID as parent');
+                }
+            })
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                console.log('Parent folder could not be read ' + textStatus);
+                console.log(errorThrown);
+                showError('Fehler', 'Der übergeordnete Ordner konnte nicht abgefragt werden. Möglicherweise haben Sie keine Rechte.');
+            })
+            .always(function() {
+                loading(false);
+            });
+    }
+
     function showSuccess(title, content, time) {
         if(storage.noMessages) return;
         if(time === undefined) time = 5000;
@@ -384,7 +413,7 @@ $(function() {
 
     function showError(title, content, time) {
         if(storage.noMessages) return;
-        if(time === undefined) time = 5000;
+        if(time === undefined) time = 10000;
         error.find('h2').html(title);
         error.find('p').html(content);
         addPopup('error-visible');
@@ -532,6 +561,15 @@ $(function() {
         get_folder: function (folder) {
             return $.ajax({
                 url: 'api.php?q=get_folder&v=' + folder,
+                type: 'GET',
+                dataType: 'json'
+            });
+        },
+
+        get_parent_folder: function (folder) {
+            if(folder == undefined) folder = storage.current_folder;
+            return $.ajax({
+                url: 'api.php?q=get_parent_folder&id=' + folder,
                 type: 'GET',
                 dataType: 'json'
             });
