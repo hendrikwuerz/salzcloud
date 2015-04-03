@@ -20,7 +20,7 @@ $(function() {
 
         // init storage
         storage.current_user = null; // the current user -> set later by ajax request
-        storage.current_folder = 1; // the current visible folder
+        storage.current_folder = (window.location.hash == '' ? 1 : window.location.hash.substring(1)); // the current visible folder
         storage.selectedFiles = []; // files selected for upload
         storage.jq_files = $('#files'); // site area to display files (and folders)
         storage.popups = []; // visible popups Stack - FIFO
@@ -68,22 +68,36 @@ $(function() {
     // or reloads current folder if no value is passed
     function get_folder(id) {
         if(id == undefined) id = storage.current_folder;
-        api.get_folder(id).done(function( data ) {
-            //console.log( data );
-            storage.jq_files.html(""); // remove old elements
-            $.each(data, function(index, elem) {
-                var keys = Object.keys(elem);
-                var data = "";
-                $.each(keys, function(index, value) {
-                    data += " data-" + value + "='" + elem[value] + "'";
-                });
-                var html = "<div class='" + elem.data_type + "'" + data + "><span>" + (elem.data_type == 'folder' ? elem.name : elem.title) + "</span></div>";
+        storage.current_folder = id;
 
-                storage.jq_files.append(html);
+        // store folder in URL
+        window.location.hash = id;
+
+        // get content
+        api.get_folder(id)
+            .done(function( data ) {
+                //console.log( data );
+                storage.jq_files.html(""); // remove old elements
+                $.each(data, function(index, elem) {
+                    var keys = Object.keys(elem);
+                    var data = "";
+                    $.each(keys, function(index, value) {
+                        data += " data-" + value + "='" + elem[value] + "'";
+                    });
+                    var html = "<div class='" + elem.data_type + "'" + data + "><span>" + (elem.data_type == 'folder' ? elem.name : elem.title) + "</span></div>";
+
+                    storage.jq_files.append(html);
+                });
+                console.log('finished loading folder ' + id);
+                storage.jq_files.find('> div.file').on('click', showFile);
+                storage.jq_files.find('> div.folder').on('click', function(event) {
+                    get_folder($(event.currentTarget).attr('data-id'));
+                });
+            })
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                console.error('The folder could not be loaded ' + textStatus);
+                showError('Fehler', 'Der Ordnerinhalt konnte nicht geladen werden.');
             });
-            console.log('finished loading folder ' + id);
-            storage.jq_files.find('> div').on('click', showFile);
-        });
     }
 
     function listPopups() {
