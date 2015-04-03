@@ -40,7 +40,7 @@ $(function() {
         success.on('keydown', function(e){if(e.keyCode == 13)closePopup('success-visible')});
         error.on('click', function(){closePopup('error-visible')});
         login.find('.close').on('click', function(){closePopup("login-visible")});
-        menu.find('.upload').on('click', newFile);
+        menu.find('.file-new').on('click', newFile);
         details.find('input[type=file]').on('change', function(event) {storage.selectedFiles = event.target.files; var title_input = details.find("form[name=attributes] input[name=title]"); if(title_input.val() == '') title_input.val(event.target.files[0].name); console.log(event.target.files[0].name);});
         details.find('.close').on('click', function(){closePopup("details-visible")});
         details.find('form[name=attributes]').submit('click', function(event) {uploadFile(); return false;});

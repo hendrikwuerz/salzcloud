@@ -276,9 +276,23 @@ html.details-visible #overlay {
 
 
 /* ----------------------------------------------------------------------------------------------------------------- */
-#menu .upload {
-    height: 40px;
+#menu img {
     cursor: pointer;
+    vertical-align: middle;
+}
+#menu img.folder-up {
+    height: 44px;
+    padding-bottom: 4px;
+}
+#menu img.folder-new {
+    height: 44px;
+}
+#menu img.file-new {
+    height: 37px;
+    padding-bottom: 2px;
+}
+#menu img.reload {
+    height: 33px;
 }
 
 /* ----------------------------------------------------------------------------------------------------------------- */

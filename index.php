@@ -154,7 +154,10 @@ header('Content-Type: text/html; charset=UTF-8');
     <div id="content">
 
         <div id="menu">
-            <img class="upload" src="img/upload.svg" alt="[Hochladen]">
+            <img class="folder-up" src="img/folder_up.svg" alt="[Ordner nach oben]">
+            <img class="folder-new" src="img/folder_new.svg" alt="[Neuer Ordner]">
+            <img class="file-new" src="img/file_new.svg" alt="[Neue Datei]">
+            <img class="reload" src="img/reload.svg" alt="[Aktualisieren]">
         </div>
         <!-- Area where files are displayed by JavaScript -->
         <div id="files">
