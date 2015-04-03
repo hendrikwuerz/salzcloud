@@ -7,8 +7,8 @@ class CloudAPI {
 
     /**
      * Return the current user that is using the system
+     * Example: {"id":1,"name":"anonymous","admin":false}
      * @echo A JSON String with the current user
-     * TODO: Add example
      */
     static function getCurrentUser() {
         echo System::getCurrentUser()->get_json();
@@ -155,6 +155,7 @@ class CloudAPI {
         }
 
         // allow hot-link for public files
+        /** @noinspection PhpUndefinedClassInspection */
         Util::set_chmod($id, Util::has_read_access($id, 'file', User::get_default_user()));
 
     }
@@ -404,10 +405,6 @@ class CloudAPI {
 
         if(Util::has_read_access($id, 'folder')) { // allowed to see this folder
             // fetch folders
-            /*$sql = "SELECT distinct folders.id, folders.name, folders.lft
-                FROM folders, (SELECT folders.lft as lft, folders.rgt as rgt FROM folders WHERE folders.id = $id) bounds
-                WHERE folders.lft between bounds.lft and bounds.rgt";
-            */
             $sql = "SELECT distinct folders.id, folders.name
                 FROM folders
                 WHERE folders.parent = $id";
@@ -448,7 +445,6 @@ class CloudAPI {
     static function getParentFolder($id) {
         $mysqli = System::connect('cloud');
 
-        $data = array();
         $id = $mysqli->real_escape_string($id);
 
         if(Util::has_read_access($id, 'folder')) { // allowed to see this folder

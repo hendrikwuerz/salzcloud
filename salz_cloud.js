@@ -75,14 +75,14 @@ $(function() {
         loading(true);
 
         if(id == undefined) id = storage.current_folder;
-        storage.current_folder = id;
-
-        // store folder in URL
-        window.location.hash = id;
 
         // get content
         api.get_folder(id)
             .done(function( data ) {
+                // maybe entered a new folder -> store it
+                storage.current_folder = id;
+                window.location.hash = id;
+
                 //console.log( data );
                 storage.jq_files.html(""); // remove old elements
                 $.each(data, function(index, elem) {

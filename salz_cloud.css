@@ -254,8 +254,8 @@ html.upload-visible #overlay {
 #details.block form .content .row {
     margin: 5px 0;
 }
-#details.block form .content .row span,
-#details.block form .content .row label {
+#details.block form[name=attributes] .content .row span,
+#details.block form[name=attributes] .content .row label {
     display: inline-block;
     width: 65px;
 }
