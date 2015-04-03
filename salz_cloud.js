@@ -122,6 +122,7 @@ $(function() {
         attribute_form.find('input[name=type]').val('file');
         attribute_form.find('input[name=id]').val('');
         attribute_form.find('input[name=title]').val('');
+        attribute_form.find('input[name=folder]').val(storage.current_folder);
         attribute_form.css('display', 'block');
 
         var access_form = details.find("form[name='access-rights']");
@@ -143,7 +144,7 @@ $(function() {
         var elem = $(event.currentTarget);
 
         // DISPLAY DATA (READ)
-        details.find('h2').html( elem.attr('data-type') == 'folder' ? elem.attr('data-name') : elem.attr('data-title') );
+        details.find('h2').html( elem.attr('data-title') );
         details.find('.hotlink a').attr('href', elem.attr('data-hotlink') );
         details.find('.hotlink a').html(elem.attr('data-hotlink') );
         details.find('.api-link a').attr('href', api.get_file(elem.attr('data-id')) );
@@ -188,6 +189,7 @@ $(function() {
                     attribute_form.find('input[name=type]').val(elem.attr('data-data_type'));
                     attribute_form.find('input[name=id]').val(elem.attr('data-id'));
                     attribute_form.find('input[name=title]').val( elem.attr('data-title') );
+                    attribute_form.find('input[name=folder]').val( elem.attr('data-folder') );
                     attribute_form.css('display', 'block');
                 } else { // no write rights
                     attribute_form.css('display', 'none');
@@ -293,7 +295,7 @@ $(function() {
                     file_id = data.id; // Save file ID (possible new file)
 
                     // set attributes
-                    set_file_attributes_request = api.set_file_attributes(file_id, details.find('input[name=title]').val())
+                    set_file_attributes_request = api.set_file_attributes(file_id, details.find('input[name=title]').val(), details.find('input[name=folder]').val())
                         .fail(function(jqXHR, textStatus, errorThrown) {
                             console.log('JQuery UPLOAD ERROR: ' + textStatus);
                             errors = true;
@@ -311,7 +313,7 @@ $(function() {
 
         } else if(file_id != '') { // only update attributes of existing file
             // set attributes
-            api.set_file_attributes(file_id, details.find('input[name=title]').val())
+            api.set_file_attributes(file_id, details.find('input[name=title]').val(), details.find('input[name=folder]').val())
                 .done(function( data ) {
                     showSuccess('Gespeichert', 'Die Dateiattribute wurden gespeichert');
                 })
@@ -488,9 +490,13 @@ $(function() {
             });
         },
 
-        set_file_attributes: function (id, title) {
+        set_file_attributes: function (id, title, folder) {
+            var options = {w: {
+                title: title,
+                folder: folder
+            }};
             return $.ajax({
-                url: 'api.php?q=set_file_attributes&v=' + id + '&w=' + title,
+                url: 'api.php?q=set_file_attributes&v=' + id + '&' + $.param(options),
                 type: 'POST',
                 dataType: 'json'
             });

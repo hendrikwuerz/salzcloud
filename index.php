@@ -77,6 +77,10 @@ header('Content-Type: text/html; charset=UTF-8');
                 <label for="title">Titel</label>
                 <input type="text" name="title" placeholder="Titel">
             </div>
+            <div class="row folder">
+                <label for="title">Ordner</label>
+                <input type="text" name="folder" placeholder="Ordner">
+            </div>
             <div class="row">
                 <label for="file">Datei</label>
                 <input type="file" name="file">

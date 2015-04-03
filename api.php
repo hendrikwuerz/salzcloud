@@ -236,12 +236,14 @@ class CloudAPI {
      * Saves the attributes to the passed file
      * @param int $id
      *          The ID of the file to be updated
-     * @param string $title
-     *          The title of the file
+     * @param string[] $attributes
+     *          The attributes of the file
+     *          $attributes['title']
+     *          $attributes['folder']
      * @echo string
      *          A JSON String with whether the update was accepted
      */
-    static function setFileAttributes($id, $title) {
+    static function setFileAttributes($id, $attributes) {
         $mysqli = System::connect('cloud');
 
         // check write access
@@ -251,8 +253,16 @@ class CloudAPI {
             exit;
         }
 
+        // filter attributes
+        $accepted_updates = array();
+        foreach($attributes as $key => $value) {
+            if($key == 'title' || $key == 'folder') {
+                $accepted_updates[] = "$key = '".$mysqli->real_escape_string($value)."'";
+            }
+        }
+
         // update attributes
-        $sql = "UPDATE files SET title = '$title' WHERE id = $id";
+        $sql = "UPDATE files SET ".implode(", ", $accepted_updates)."WHERE id = $id";
         if($mysqli->query($sql)) {
             echo new SuccessMessage('Attributes changed');
         } else {
@@ -399,7 +409,7 @@ class CloudAPI {
             }
 
             // fetch files
-            $sql = "SELECT files.id, files.title, files.type, files.filename
+            $sql = "SELECT files.id, files.title, files.type, files.filename, files.folder
                 FROM files
                 WHERE files.folder = $id";
             if($result = $mysqli->query($sql)) {

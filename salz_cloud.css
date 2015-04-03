@@ -218,6 +218,7 @@ html.upload-visible #overlay {
 #details.block form.loading {
     opacity: 0.2;
 }
+#details.block.new-file .row.folder,
 #details.block.new-file .row.hotlink,
 #details.block.new-file .row.api-link {
     display: none;
@@ -252,6 +253,11 @@ html.upload-visible #overlay {
 }
 #details.block form .content .row {
     margin: 5px 0;
+}
+#details.block form .content .row span,
+#details.block form .content .row label {
+    display: inline-block;
+    width: 65px;
 }
 #details.block .row.hotlink a,
 #details.block .row.api-link a {
