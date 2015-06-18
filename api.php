@@ -87,10 +87,13 @@ class CloudAPI {
      *          The file to be stored
      * @param null $id
      *          The ID of the file
+     * @param string $title
+     *          The new title of the file. Only available when initializing a new file.
+     *          Use setFileAttributes to update an existing file
      * @echo int
      *          The final ID of the file
      */
-    static function setFile($file, $id = null) {
+    static function setFile($file, $id = null, $title = '') {
         $mysqli = System::connect('cloud');
         $current_user = System::getCurrentUser();
 
@@ -103,7 +106,7 @@ class CloudAPI {
             $sql = "INSERT INTO files
             (id, title, type, filename, folder)
             VALUES
-            (NULL, '', '$type', '$filename', 1)";
+            (NULL, '$title', '$type', '$filename', 1)";
             $mysqli->query($sql);
             $id = $mysqli->insert_id;
             mkdir(Util::$uploadDir."/$id", 0700);
@@ -155,7 +158,6 @@ class CloudAPI {
         }
 
         // allow hot-link for public files
-        /** @noinspection PhpUndefinedClassInspection */
         Util::set_chmod($id, Util::has_read_access($id, 'file', User::get_default_user()));
 
     }
@@ -605,7 +607,8 @@ else if($_GET['q'] == 'get_current_user') { // list the content of the folder wi
     CloudAPI::getFile($_GET['id'], (isset($_GET['w']) ? $_GET['w'] : array()));
 
 } else if($_GET['q'] == 'set_file') { // sets the uploaded file for the passed ID
-    CloudAPI::setFile($_FILES[0], $_POST['id']);
+    $file = (isset($_FILES['file']) ? $_FILES['file'] : $_FILES[0]);
+    CloudAPI::setFile($file, (isset($_POST['id']) ? $_POST['id'] : ''), (isset($_POST['title']) ? $_POST['title'] : ''));
 
 } else if($_GET['q'] == 'delete_file') { // deletes the file with the passed id
     CloudAPI::deleteFile($_GET['id']);
