@@ -97,26 +97,22 @@ class CloudAPI {
         $mysqli = System::connect('cloud');
         $current_user = System::getCurrentUser();
 
-        $type = $mysqli->real_escape_string($file['type']);
-        $filename = Util::get_filename_for($file['name']);
+        if(is_array($file)) {
+            $image_type = exif_imagetype($file['tmp_name']);
+            $type = $mysqli->real_escape_string($file['type']);
+            $filename = Util::get_filename_for($file['name']);
+        } else {
+            list($width, $height, $image_type, $attr) = getimagesize($file);
+            $type = image_type_to_mime_type($image_type);
+            $filename = basename($file);
+            $arr_filename = explode(".", $filename);
+            if(count($arr_filename) > 0) $filename = $arr_filename[0].image_type_to_extension($image_type);
+            if($title == '') $title = $filename;
+        }
 
         if($id == null || $id == '') { // new file
-
-            //Register File in DB
-            $sql = "INSERT INTO files
-            (id, title, type, filename, folder)
-            VALUES
-            (NULL, '$title', '$type', '$filename', 1)";
-            $mysqli->query($sql);
-            $id = $mysqli->insert_id;
-            mkdir(Util::$uploadDir."/$id", 0700);
-
-            // add access right for uploader
-            $sql = "INSERT INTO rights
-                    (access, user_id, data_type, data_id)
-                    VALUES
-                    ('admin', '".$current_user->id."', 'file', '$id')";
-            $mysqli->query($sql);
+            // Register file in DB, set rights and create folder
+            $id = Util::prepareForNewFile($title, $type, $filename, $current_user->id);
 
         } else { // update existing file
 
@@ -135,21 +131,23 @@ class CloudAPI {
 
         }
 
+        // Save original file
+        if(is_array($file)) $success = move_uploaded_file($file['tmp_name'], Util::$uploadDir."/$id/$filename");
+        else $success = copy($file, Util::$uploadDir."/$id/$filename");
+
         // save scaled versions if it is an image
-        $image_type = exif_imagetype($file['tmp_name']);
         // $image_type is false if this is not an image
         if($image_type && ($image_type == IMAGETYPE_JPEG || $image_type == IMAGETYPE_GIF || $image_type == IMAGETYPE_PNG)) {
             include_once("SimpleImage.php");
             $image = new SimpleImage();
-            $image->load($file['tmp_name']);
+            $image->load(Util::$uploadDir."/$id/$filename");
             $image->resizeToWidth(400);
             $image->save(Util::$uploadDir."/$id/400width_$filename");
             $image->resizeToWidth(100);
             $image->save(Util::$uploadDir."/$id/100width_$filename");
         }
 
-        // Save original file
-        if(move_uploaded_file($file['tmp_name'], Util::$uploadDir."/$id/$filename")) {
+        if($success) {
             header('HTTP/1.0 200 OK');
             echo json_encode(array('id' => $id));
         } else {
@@ -471,6 +469,44 @@ class Util {
     static $uploadDir = './uploads';
 
     /**
+     * creates a database entry for the file
+     * creates admin rights for the owner
+     * creates a directory for the file
+     *
+     * @param $title
+     *      The title of the file ("My great file")
+     * @param $type
+     *      The type of the file ("image/jpeg")
+     * @param $filename
+     *      The filename of the original file ("image.jpg")
+     * @param $ownerID
+     *      The ID of the owner with admin rights
+     * @return int
+     *      The generated ID for the file
+     */
+    static function prepareForNewFile($title, $type, $filename, $ownerID) {
+        $mysqli = System::connect('cloud');
+
+        //Register File in DB
+        $sql = "INSERT INTO files
+            (id, title, type, filename, folder)
+            VALUES
+            (NULL, '$title', '$type', '$filename', 1)";
+        $mysqli->query($sql);
+        $id = $mysqli->insert_id;
+        mkdir(Util::$uploadDir."/$id", 0700);
+
+        // add access right for uploader
+        $sql = "INSERT INTO rights
+                    (access, user_id, data_type, data_id)
+                    VALUES
+                    ('admin', '".$ownerID."', 'file', '$id')";
+        $mysqli->query($sql);
+
+        return $id;
+    }
+
+    /**
      * get a filename for the passed file which can be used to store it.
      * @param $file : The original filename
      * @param string $prefix: A possible prefix of the file
@@ -608,7 +644,10 @@ else if($_GET['q'] == 'get_current_user') { // list the content of the folder wi
 
 } else if($_GET['q'] == 'set_file') { // sets the uploaded file for the passed ID
     $file = (isset($_FILES['file']) ? $_FILES['file'] : $_FILES[0]);
-    CloudAPI::setFile($file, (isset($_POST['id']) ? $_POST['id'] : ''), (isset($_POST['title']) ? $_POST['title'] : ''));
+    CloudAPI::setFile($file, (isset($_POST['id']) ? $_POST['id'] : null), (isset($_POST['title']) ? $_POST['title'] : null));
+
+} else if($_GET['q'] == 'copy_file') { // sets the uploaded file for the passed ID
+    CloudAPI::setFile($_GET['url'], null, (isset($_GET['title']) ? $_GET['title'] : null));
 
 } else if($_GET['q'] == 'delete_file') { // deletes the file with the passed id
     CloudAPI::deleteFile($_GET['id']);
