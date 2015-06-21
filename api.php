@@ -106,7 +106,8 @@ class CloudAPI {
             $type = image_type_to_mime_type($image_type);
             $filename = basename($file);
             $arr_filename = explode(".", $filename);
-            if(count($arr_filename) > 0) $filename = $arr_filename[0].image_type_to_extension($image_type);
+            if(count($arr_filename) > 0) $filename = $arr_filename[0];
+            $filename = Util::get_filename_for($filename.image_type_to_extension($image_type));
             if($title == '') $title = $filename;
         }
 
@@ -515,7 +516,7 @@ class Util {
     static function get_filename_for($file, $prefix = '') {
         $first = array(" ", "&", "ä", "ö", "ü", "Ä", "Ö", "Ü", "ß", "<", ">", "€", "¹", "²", "³");
         $replaced = array("_", "_", "ae", "oe", "ue", "Ae;", "Oe", "Ue", "ss", "_", "_", "_Euro", "1", "2", "3");
-        return str_replace($first, $replaced, $prefix.$file);
+        return strtolower(preg_replace('/[^A-Za-z0-9\-\._]/', '', str_replace($first, $replaced, $prefix.$file)));
     }
     static function has_admin_access($elem, $type = 'file', $current_user = null) {
         return Util::has_access($elem, 'admin', $type, $current_user);
