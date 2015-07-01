@@ -90,12 +90,16 @@ class CloudAPI {
      * @param string $title
      *          The new title of the file. Only available when initializing a new file.
      *          Use setFileAttributes to update an existing file
+     * @param int $folder
+     *          The ID of the folder where the file should be registered
      * @echo int
      *          The final ID of the file
      */
-    static function setFile($file, $id = null, $title = '') {
+    static function setFile($file, $id = null, $title = '', $folder = null) {
         $mysqli = System::connect('cloud');
         $current_user = System::getCurrentUser();
+
+        if($folder == null) $folder = 1;
 
         if(is_array($file)) {
             $image_type = exif_imagetype($file['tmp_name']);
@@ -113,7 +117,7 @@ class CloudAPI {
 
         if($id == null || $id == '') { // new file
             // Register file in DB, set rights and create folder
-            $id = Util::prepareForNewFile($title, $type, $filename, $current_user->id);
+            $id = Util::prepareForNewFile($title, $type, $filename, $folder, $current_user->id);
 
         } else { // update existing file
 
@@ -485,14 +489,14 @@ class Util {
      * @return int
      *      The generated ID for the file
      */
-    static function prepareForNewFile($title, $type, $filename, $ownerID) {
+    static function prepareForNewFile($title, $type, $filename, $folder, $ownerID) {
         $mysqli = System::connect('cloud');
 
         //Register File in DB
         $sql = "INSERT INTO files
             (id, title, type, filename, folder)
             VALUES
-            (NULL, '$title', '$type', '$filename', 1)";
+            (NULL, '$title', '$type', '$filename', $folder)";
         $mysqli->query($sql);
         $id = $mysqli->insert_id;
         mkdir(Util::$uploadDir."/$id", 0700);
@@ -645,10 +649,10 @@ else if($_GET['q'] == 'get_current_user') { // list the content of the folder wi
 
 } else if($_GET['q'] == 'set_file') { // sets the uploaded file for the passed ID
     $file = (isset($_FILES['file']) ? $_FILES['file'] : $_FILES[0]);
-    CloudAPI::setFile($file, (isset($_POST['id']) ? $_POST['id'] : null), (isset($_POST['title']) ? $_POST['title'] : null));
+    CloudAPI::setFile($file, (isset($_POST['id']) ? $_POST['id'] : null), (isset($_POST['title']) ? $_POST['title'] : null), (isset($_POST['folder']) ? $_POST['folder'] : null));
 
 } else if($_GET['q'] == 'copy_file') { // sets the uploaded file for the passed ID
-    CloudAPI::setFile($_GET['url'], null, (isset($_GET['title']) ? $_GET['title'] : null));
+    CloudAPI::setFile($_GET['url'], null, (isset($_GET['title']) ? $_GET['title'] : null), (isset($_GET['folder']) ? $_GET['folder'] : null));
 
 } else if($_GET['q'] == 'delete_file') { // deletes the file with the passed id
     CloudAPI::deleteFile($_GET['id']);
