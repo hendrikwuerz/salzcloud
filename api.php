@@ -706,7 +706,7 @@ class SuccessMessage {
 
 
 if(false){;}
-else if($_GET['q'] == 'get_current_user') { // list the content of the folder with the passed ID
+else if($_GET['q'] == 'get_current_user' || $_GET['q'] == 'whoami') { // return information of the current user
     CloudAPI::getCurrentUser();
 
 } else if($_GET['q'] == 'get_file') { // gets the uploaded file with the passed ID and the wished width
