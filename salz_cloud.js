@@ -25,6 +25,7 @@ $(function() {
         storage.jq_files = $('#files'); // site area to display files (and folders)
         storage.popups = []; // visible popups Stack - FIFO
         storage.waitStack = 0; // how many wait requests are active
+        storage.noMessages = false; // disable the display of any message pop-ups
 
         // get current user
         api.get_current_user()
@@ -32,6 +33,9 @@ $(function() {
                 storage.current_user = data;
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 storage.current_user = {id:1, name:"anonymous", admin:"false"};
+                console.log(jqXHR);
+                console.log(textStatus);
+                console.log(errorThrown);
             });
 
         // register listener
@@ -47,8 +51,8 @@ $(function() {
         login.find('.close').on('click', function(){closePopup("login-visible")});
         details.find('input[type=file]').on('change', function(event) {storage.selectedFiles = event.target.files; var title_input = details.find("form[name=attributes] input[name=title]"); if(title_input.val() == '') title_input.val(event.target.files[0].name); console.log(event.target.files[0].name);});
         details.find('.close').on('click', function(){closePopup("details-visible")});
-        details.find('form[name=attributes]').submit('click', function(event) {uploadFile(); return false;});
-        details.find('form[name=access-rights]').submit('click', function(event) {updateRights(); return false;});
+        details.find('form[name=attributes]').submit('click', function() {uploadFile(); return false;});
+        details.find('form[name=access-rights]').submit('click', function() {updateRights(); return false;});
         details.find('form[name=access-rights] .add').on('click', addRightsField);
         details.find('form[name=operations] .delete').on('click', deleteFile);
 
@@ -60,7 +64,6 @@ $(function() {
     * PUBLIC
      */
     this.show_login = show_login;
-    this.show_folder = get_folder;
     this.listPopups = listPopups;
 
     //show login_screen
@@ -91,7 +94,7 @@ $(function() {
                     $.each(keys, function(index, value) {
                         data += " data-" + value + "='" + elem[value] + "'";
                     });
-                    var html = "<div class='" + elem.data_type + "'" + data + "><span>" + (elem.data_type == 'folder' ? elem.name : elem.title) + "</span></div>";
+                    var html = "<div class='" + elem['data_type'] + "'" + data + "><span>" + (elem['data_type'] == 'folder' ? elem.name : elem.title) + "</span></div>";
 
                     storage.jq_files.append(html);
                 });
@@ -103,6 +106,7 @@ $(function() {
             })
             .fail(function(jqXHR, textStatus, errorThrown) {
                 console.error('The folder could not be loaded ' + textStatus);
+                console.log(errorThrown);
                 showError('Fehler', 'Der Ordnerinhalt konnte nicht geladen werden. Möglicherweise haben Sie keine Rechte');
             })
             .always(function() {
@@ -296,7 +300,7 @@ $(function() {
         // upload a file
         if(storage.selectedFiles.length > 0) {
             var errors = false;
-            var set_file_attributes_request;
+            var set_file_attributes_request = null;
             var set_file_request = api.set_file(file_id, storage.selectedFiles)
                 .done(function( data ) {
                     if(file_id != '') { // uploaded a new image -> refresh
@@ -308,13 +312,16 @@ $(function() {
                     set_file_attributes_request = api.set_file_attributes(file_id, details.find('input[name=title]').val(), details.find('input[name=folder]').val())
                         .fail(function(jqXHR, textStatus, errorThrown) {
                             console.log('JQuery UPLOAD ERROR: ' + textStatus);
+                            console.log(errorThrown);
                             errors = true;
                         });
                 })
                 .fail(function(jqXHR, textStatus, errorThrown) {
                     console.log('JQuery UPLOAD ERROR: ' + textStatus);
+                    console.log(errorThrown);
                     errors = true;
                 });
+            // When both requests are done -> Give answer to user
             $.when(set_file_request, set_file_attributes_request).always(function() {
                     if(errors) showError('Fehler', 'Die Daten konnten nicht gespeichert werden');
                     else showSuccess('Gespeichert', 'Die Daten wurden gespeichert');
@@ -325,10 +332,15 @@ $(function() {
             // set attributes
             api.set_file_attributes(file_id, details.find('input[name=title]').val(), details.find('input[name=folder]').val())
                 .done(function( data ) {
-                    showSuccess('Gespeichert', 'Die Dateiattribute wurden gespeichert');
+                    if(data['success']) {
+                        showSuccess('Gespeichert', 'Die Dateiattribute wurden gespeichert');
+                    } else {
+                        showError('Fehler', 'Die Anfrage wurde korrekt ausgeführt, allerdings konnten die Daten nicht gesetzt werden.');
+                    }
                 })
                 .fail(function(jqXHR, textStatus, errorThrown) {
                     console.log('JQuery UPLOAD ERROR: ' + textStatus);
+                    console.log(errorThrown);
                     showError('Fehler', 'Die Dateiattribute konnten nicht gespeichert werden');
                 }).always(always);
 
@@ -345,7 +357,7 @@ $(function() {
 
         loading(true);
         api.set_rights(details.find('form[name=access-rights]').serialize())
-            .done(function(data, textStatus, jqXHR) {
+            .done(function() {
                 showSuccess('Gespeichert', 'Die Rechte wurden erfolgreich gesetzt');
             })
             .fail(function(jqXHR, textStatus, errorThrown) {
@@ -363,7 +375,7 @@ $(function() {
         loading(true);
         var file_id = details.find('input[name=id]').val();
         api.delete_file(file_id)
-            .done(function(data, textStatus, jqXHR) {
+            .done(function() {
                 showSuccess('Gelöscht', 'Die Datei wurde gelöscht');
                 closePopup("details-visible");
             })
@@ -387,6 +399,8 @@ $(function() {
                     get_folder(data['parent'])
                 } else {
                     console.log('Received non valid folder ID as parent');
+                    console.log(textStatus);
+                    console.log(jqXHR);
                 }
             })
             .fail(function(jqXHR, textStatus, errorThrown) {

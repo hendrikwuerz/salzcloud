@@ -482,7 +482,6 @@ class Util {
      * @param $ownerID
      *      The ID of the owner with admin rights
      * @return int The generated ID for the file
-     * The generated ID for the file
      */
     static function prepareForNewFile($title, $type, $filename, $folder, $ownerID) {
         $mysqli = System::connect('cloud');
