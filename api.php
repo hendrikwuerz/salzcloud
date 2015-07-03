@@ -349,13 +349,6 @@ class CloudAPI {
         $mysqli = System::connect('cloud');
         $current_user = System::getCurrentUser();
 
-        // check var
-        // TODO: Move to api call function (bottom)
-        if(! (isset($type) && isset($id) && isset($user) && isset($access)) ) {
-            header('HTTP/1.0 400 Bad Request');
-            echo new ErrorMessage(400, 'Bad Request', 'All attributes have to be filled in');
-        }
-
         $type = $mysqli->real_escape_string($type);
         $id = $mysqli->real_escape_string($id);
 
@@ -484,10 +477,12 @@ class Util {
      *      The type of the file ("image/jpeg")
      * @param $filename
      *      The filename of the original file ("image.jpg")
+     * @param $folder
+     *      The folder of where the file will be stored
      * @param $ownerID
      *      The ID of the owner with admin rights
-     * @return int
-     *      The generated ID for the file
+     * @return int The generated ID for the file
+     * The generated ID for the file
      */
     static function prepareForNewFile($title, $type, $filename, $folder, $ownerID) {
         $mysqli = System::connect('cloud');
@@ -670,7 +665,13 @@ else if($_GET['q'] == 'get_current_user') { // list the content of the folder wi
     CloudAPI::getRights($_GET['v'], $_GET['w']);
 
 } else if($_GET['q'] == 'set_rights') { // set the access rights of the file with the passed ID
-    CloudAPI::setRights($_POST['id'], $_POST['user'], $_POST['access']);
+    $type = (isset($_POST['type']) ? $_POST['type'] : 'file');
+    if(! (isset($type) && isset($_POST['id']) && isset($_POST['user']) && isset($_POST['access'])) ) {
+        header('HTTP/1.0 400 Bad Request');
+        echo new ErrorMessage(400, 'Bad Request', 'All attributes have to be filled in');
+        die;
+    }
+    CloudAPI::setRights($_POST['id'], $_POST['user'], $_POST['access'], $type);
 
 } else if($_GET['q'] == 'get_folder') { // list the content of the folder with the passed ID
     CloudAPI::getFolder($_GET['v']);
