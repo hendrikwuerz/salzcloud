@@ -214,6 +214,9 @@ class CloudAPI {
     static function getFileAttributes($id) {
         $mysqli = System::connect('cloud');
 
+        // Escape values
+        $id = $mysqli->real_escape_string($id);
+
         // check read access
         if(!Util::has_read_access('file', $id)) {
             header('HTTP/1.0 403 Forbidden');
@@ -251,6 +254,9 @@ class CloudAPI {
      */
     static function setFileAttributes($id, $attributes) {
         $mysqli = System::connect('cloud');
+
+        // Escape values
+        $id = $mysqli->real_escape_string($id);
 
         // check write access
         if(!Util::has_write_access($id, 'file')) {
@@ -309,6 +315,10 @@ class CloudAPI {
     static function getRights($id, $type = 'file') {
         $mysqli = System::connect('cloud');
 
+        // Escape values
+        $id = $mysqli->real_escape_string($id);
+        $type = $mysqli->real_escape_string($type);
+
         if(!Util::has_admin_access($id, $type)) {
             header('HTTP/1.0 403 Forbidden');
             echo (new ErrorMessage(403, 'Forbidden', 'You do not have admin access, so you can not see the rights'))->getJSON();
@@ -349,8 +359,10 @@ class CloudAPI {
         $mysqli = System::connect('cloud');
         $current_user = System::getCurrentUser();
 
-        $type = $mysqli->real_escape_string($type);
         $id = $mysqli->real_escape_string($id);
+        $user = $mysqli->real_escape_string($user);
+        $access = $mysqli->real_escape_string($access);
+        $type = $mysqli->real_escape_string($type);
 
         // check admin access
         if(!Util::has_admin_access($id, $type)) {
@@ -534,6 +546,13 @@ class Util {
     static function prepareForNewFile($title, $type, $filename, $folder, $ownerID) {
         $mysqli = System::connect('cloud');
 
+        // Escape values
+        $title = $mysqli->real_escape_string($title);
+        $type = $mysqli->real_escape_string($type);
+        $filename = $mysqli->real_escape_string($filename);
+        $folder = $mysqli->real_escape_string($folder);
+        $ownerID = $mysqli->real_escape_string($ownerID);
+
         //Register File in DB
         $sql = "INSERT INTO files
             (id, title, type, filename, folder)
@@ -584,6 +603,10 @@ class Util {
     }
     public static function get_access($elem, $type = 'file', $current_user = null) {
         $mysqli = System::connect('cloud');
+
+        // Escape values
+        $elem = $mysqli->real_escape_string($elem);
+        $type = $mysqli->real_escape_string($type);
 
         if($current_user == null) $current_user = System::getCurrentUser();
 
