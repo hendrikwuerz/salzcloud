@@ -6,7 +6,7 @@ body {
     height: 100%;
     background-color: #ffffff;
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 17px;
+    font-size: 13px;
     color: #000000;
     margin: 0;
     padding: 0;
@@ -296,21 +296,31 @@ html.details-visible #overlay {
 }
 
 /* ----------------------------------------------------------------------------------------------------------------- */
-#files > div {
-    position: relative;
-    display: inline-block;
-    box-sizing: border-box;
-    height: 100px;
-    width: 100px;
-    margin: 10px;
-    overflow: hidden;
-    background-color: rgba(153, 0, 17, 0.15);
-    border: 2px solid #990011;
-    cursor: pointer;
+html.list-layout #files > div {
+    border: none;
+    display: block;
+    height: auto;
+    margin: 5px 0;
+    width: auto;
 }
+#files > div {
+     position: relative;
+     display: inline-block;
+     box-sizing: border-box;
+     height: 100px;
+     width: 100px;
+     margin: 10px;
+     overflow: hidden;
+     background-color: rgba(153, 0, 17, 0.15);
+     border: 2px solid #990011;
+     cursor: pointer;
+ }
 #files > div:hover {
     background-color: rgba(153, 0, 17, 0.1);
     border-color: rgba(153, 0, 17, 0.8);
+}
+html.list-layout #files > div > span {
+    position: relative;
 }
 #files > div > span {
     position: absolute;

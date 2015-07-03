@@ -158,6 +158,8 @@ header('Content-Type: text/html; charset=UTF-8');
             <img class="folder-new" src="img/folder_new.svg" alt="[Neuer Ordner]">
             <img class="file-new" src="img/file_new.svg" alt="[Neue Datei]">
             <img class="reload" src="img/reload.svg" alt="[Aktualisieren]">
+            <img class="layout-list" src="img/layout-list.svg" alt="[Listenansich]">
+            <img class="layout-grid" src="img/layout-grid.svg" alt="[Gitteransicht]">
         </div>
         <!-- Area where files are displayed by JavaScript -->
         <div id="files">

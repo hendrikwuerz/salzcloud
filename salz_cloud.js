@@ -27,6 +27,7 @@ $(function() {
         storage.popups = []; // visible popups Stack - FIFO
         storage.waitStack = 0; // how many wait requests are active
         storage.noMessages = false; // disable the display of any message pop-ups
+        storage.layout = 'grid'; // disable the display of any message pop-ups
 
         // get current user
         api.get_current_user()
@@ -44,6 +45,8 @@ $(function() {
         menu.find('.folder-new').on('click', function(){newFile()});
         menu.find('.file-new').on('click', function(){newFile()});
         menu.find('.reload').on('click', function(){get_folder()});
+        menu.find('.layout-list').on('click', function(){setLayout('list')});
+        menu.find('.layout-grid').on('click', function(){setLayout('grid')});
 
         overlay.on('click', function(){closePopup()});
         success.on('click', function(){closePopup('success-visible')});
@@ -59,6 +62,9 @@ $(function() {
 
         // load root folder
         get_folder();
+
+        // set initial layout
+        setLayout(storage.layout);
     }
 
     /*
@@ -126,6 +132,14 @@ $(function() {
      * PRIVATE
      */
 
+    // changes the layout of the page (list or grid layout)
+    function setLayout(layout) {
+        $(html).removeClass(storage.layout + '-layout');
+        $(html).addClass(layout + '-layout');
+        storage.layout = layout;
+    }
+
+    // open the "new file" dialog
     function newFile() {
         details.addClass('new-file');
 
