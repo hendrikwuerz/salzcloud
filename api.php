@@ -397,15 +397,25 @@ class CloudAPI {
      */
     static function getFolder($id) {
         $mysqli = System::connect('cloud');
+        $current_user = System::getCurrentUser();
 
         $data = array();
         $id = $mysqli->real_escape_string($id);
 
         if(Util::has_read_access($id, 'folder')) { // allowed to see this folder
             // fetch folders
-            $sql = "SELECT distinct folders.id, folders.name
+            if($current_user->admin) { // admin does not need rights
+                $sql = "SELECT distinct folders.id, folders.name
                 FROM folders
                 WHERE folders.parent = $id";
+            } else { // no-admin needs a access right for this folder
+                $sql = "SELECT distinct folders.id, folders.name
+                FROM folders, rights
+                WHERE folders.parent = $id
+                AND folders.id = rights.data_id
+                AND rights.data_type LIKE 'folder'
+                AND (rights.user_id = ".$current_user->id." OR rights.user_id = 1)";
+            }
             if($result = $mysqli->query($sql)) {
                 while($r = $result->fetch_assoc()) {
                     $r['data_type'] = 'folder';
@@ -414,9 +424,18 @@ class CloudAPI {
             }
 
             // fetch files
-            $sql = "SELECT files.id, files.title, files.type, files.filename, files.folder
+            if($current_user->admin) { // admin does not need rights
+                $sql = "SELECT files.id, files.title, files.type, files.filename, files.folder
                 FROM files
                 WHERE files.folder = $id";
+            } else { // no-admin needs a access right for this file
+                $sql = "SELECT files.id, files.title, files.type, files.filename, files.folder
+                FROM files, rights
+                WHERE files.folder = $id
+                AND files.id = rights.data_id
+                AND rights.data_type LIKE 'file'
+                AND (rights.user_id = ".$current_user->id." OR rights.user_id = 1)";
+            }
             if($result = $mysqli->query($sql)) {
                 while($r = $result->fetch_assoc()) {
                     $r['data_type'] = 'file';
