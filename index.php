@@ -50,7 +50,7 @@ header('Content-Type: text/html; charset=UTF-8');
     </form>
 </div>
 
-<div id="upload" class="block">
+<div id="upload" class="block scrollable">
     <h1>Hochladen</h1>
     <span class="close" onclick="$('html').removeClass('upload-visible')"></span>
 
@@ -60,7 +60,7 @@ header('Content-Type: text/html; charset=UTF-8');
     <button>Hochladen</button>
 </div>
 
-<div id="details" class="block">
+<div id="details" class="block scrollable">
     <h2></h2>
     <span class="close"></span>
 

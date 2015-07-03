@@ -1,3 +1,4 @@
+var cloud;
 
 $(function() {
 
@@ -158,6 +159,7 @@ $(function() {
         var elem = $(event.currentTarget);
 
         // DISPLAY DATA (READ)
+        details.css('top', ($(window).scrollTop() + 10) + 'px');
         details.find('h2').html( elem.attr('data-title') );
         details.find('.hotlink a').attr('href', elem.attr('data-hotlink') );
         details.find('.hotlink a').html(elem.attr('data-hotlink') );
@@ -439,6 +441,7 @@ $(function() {
     function addPopup(css_class) {
         html.addClass(css_class);
         storage.popups.push(css_class);
+        $('.block.scrollable').css('top', $(window).scrollTop() + $(window).height() * 0.1);
         layoutPopups();
     }
 
