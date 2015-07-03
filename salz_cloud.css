@@ -192,6 +192,24 @@ html.upload-visible #overlay {
     margin-top: 10px;
 }
 
+
+/* ----------------------------------------------------------------------------------------------------------------- */
+#new-folder.block {
+    width: 400px;
+    height: 200px;
+    margin: -100px auto auto -200px;
+}
+html.new-folder-visible #new-folder.block,
+html.new-folder-visible #overlay {
+    visibility: visible;
+    opacity: 1;
+}
+#new-folder.block > input {
+    display: block;
+    width: 300px;
+    margin-top: 2px;
+}
+
 /* ----------------------------------------------------------------------------------------------------------------- */
 #details.block {
     width: 400px;

@@ -50,7 +50,7 @@ header('Content-Type: text/html; charset=UTF-8');
     </form>
 </div>
 
-<div id="upload" class="block scrollable">
+<div id="upload" class="block">
     <h1>Hochladen</h1>
     <span class="close" onclick="$('html').removeClass('upload-visible')"></span>
 
@@ -58,6 +58,18 @@ header('Content-Type: text/html; charset=UTF-8');
     <input type="text" name="title" placeholder="Titel">
     <input type="file" name="file">
     <button>Hochladen</button>
+</div>
+
+<div id="new-folder" class="block">
+    <h1>Neuer Ordner</h1>
+    <span class="close" onclick="$('html').removeClass('new-folder-visible')"></span>
+
+    <p>Geben Sie einen Namen für den neuen Ordner an</p>
+    <form action="#" method="get">
+        <input type="hidden" name="parent">
+        <input type="text" name="name" placeholder="Name">
+        <input type="submit" value="Erstellen" class="save">
+    </form>
 </div>
 
 <div id="details" class="block scrollable">

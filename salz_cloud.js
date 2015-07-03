@@ -13,6 +13,7 @@ $(function() {
     var login = $('#login');
     var menu = $('#menu');
     var details = $('#details');
+    var newFolder = $('#new-folder');
 
     function init() {
 
@@ -42,7 +43,7 @@ $(function() {
 
         // register listener
         menu.find('.folder-up').on('click', function(){folderUp()});
-        menu.find('.folder-new').on('click', function(){newFile()});
+        menu.find('.folder-new').on('click', function(){showNewFolder()});
         menu.find('.file-new').on('click', function(){newFile()});
         menu.find('.reload').on('click', function(){get_folder()});
         menu.find('.layout-list').on('click', function(){setLayout('list')});
@@ -53,6 +54,7 @@ $(function() {
         success.on('keydown', function(e){if(e.keyCode == 13)closePopup('success-visible')});
         error.on('click', function(){closePopup('error-visible')});
         login.find('.close').on('click', function(){closePopup("login-visible")});
+        newFolder.find('form').submit('click', function() {createNewFolder(); return false;});
         details.find('input[type=file]').on('change', function(event) {storage.selectedFiles = event.target.files; var title_input = details.find("form[name=attributes] input[name=title]"); if(title_input.val() == '') title_input.val(event.target.files[0].name); console.log(event.target.files[0].name);});
         details.find('.close').on('click', function(){closePopup("details-visible")});
         details.find('form[name=attributes]').submit('click', function() {uploadFile(); return false;});
@@ -161,6 +163,21 @@ $(function() {
         operations_form.css('display', 'none');
 
         addPopup('details-visible');
+    }
+
+    // open the "new folder" dialog
+    function showNewFolder() {
+        // Clear form and prepare for new folder
+        var form = newFolder.find('form');
+        form.find('input[name=name]').val('');
+        form.find('input[name=parent]').val(storage.current_folder);
+
+        // show form and set focus
+        $('html').addClass('new-folder-visible');
+        form.find('input[name=name]').focus();
+
+        // register popup
+        addPopup('new-folder-visible');
     }
 
     // shows details to the passed file
@@ -290,6 +307,25 @@ $(function() {
     function removeRightsField(event) {
         var row = $(event.target).parent();
         row.remove();
+    }
+
+    function createNewFolder() {
+        // remove focus from from so ENTER will not submit it again
+        document.activeElement.blur();
+        loading(true);
+
+        api.set_folder(newFolder.find('form').serializeArray())
+            .done(function() {
+                showSuccess('Gespeichert', 'Der Ordner wurde erfolgreich angelegt')
+            })
+            .fail(function () {
+                showError('Fehler', 'Der Ordner konnte nicht angelegt werden');
+            })
+            .always(function() {
+                loading(false);
+                closePopup('new-folder-visible');
+                get_folder();
+            });
     }
 
 
@@ -583,6 +619,15 @@ $(function() {
         set_rights: function (data) {
             return $.ajax({
                 url: 'api.php?q=set_rights',
+                type: 'POST',
+                data: data,
+                dataType: 'json'
+            });
+        },
+
+        set_folder: function (data) {
+            return $.ajax({
+                url: 'api.php?q=set_folder',
                 type: 'POST',
                 data: data,
                 dataType: 'json'

@@ -456,6 +456,31 @@ class CloudAPI {
         echo json_encode($data);
     }
 
+    static function setFolder($name, $parent) {
+        $mysqli = System::connect('cloud');
+        $current_user = System::getCurrentUser();
+
+        $name = $mysqli->real_escape_string($name);
+        $parent = $mysqli->real_escape_string($parent);
+
+        if(Util::has_write_access($parent, 'folder')) {
+            // create folder
+            $sql = "INSERT INTO folders (id, name, parent) VALUES (NULL, '$name', '$parent')";
+            $mysqli->query($sql);
+            $id = $mysqli->insert_id;
+
+            // set admin access for current user
+            $sql = "INSERT INTO rights (id, access, user_id, data_type, data_id) VALUES (NULL, 'admin', '".$current_user->id."', 'folder', '$id')";
+            $mysqli->query($sql);
+
+            $result['id'] = $id;
+            echo json_encode($result);
+        } else {
+            header('HTTP/1.0 403 Forbidden');
+            echo new ErrorMessage(403, 'Forbidden', 'You do not have access to create a folder here');
+        }
+    }
+
     /**
      * Get the ID of the parent folder from the folder with the passed ID
      * @param int $id
@@ -694,6 +719,12 @@ else if($_GET['q'] == 'get_current_user') { // list the content of the folder wi
         die;
     }
     CloudAPI::setRights($_POST['id'], $_POST['user'], $_POST['access'], $type);
+
+} else if($_GET['q'] == 'set_folder') { // creates a new folder
+    if(isset($_POST['name']) && isset($_POST['parent']))
+        CloudAPI::setFolder($_POST['name'], $_POST['parent']);
+    else
+        CloudAPI::setFolder($_GET['name'], $_GET['parent']);
 
 } else if($_GET['q'] == 'get_folder') { // list the content of the folder with the passed ID
     CloudAPI::getFolder($_GET['v']);
