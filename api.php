@@ -143,7 +143,7 @@ class CloudAPI {
         // save scaled versions if it is an image
         // $image_type is false if this is not an image
         if($image_type && ($image_type == IMAGETYPE_JPEG || $image_type == IMAGETYPE_GIF || $image_type == IMAGETYPE_PNG)) {
-            include_once("SimpleImage.php");
+            include_once("lib/SimpleImage.php");
             $image = new SimpleImage();
             $image->load(Util::$uploadDir."/$id/$filename");
             $image->resizeToWidth(400);

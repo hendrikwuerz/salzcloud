@@ -17,11 +17,15 @@ header('Content-Type: text/html; charset=UTF-8');
         SalzCloud
     </title>
 
-    <script src="jquery.js"></script>
+    <script src="lib/jquery.js"></script>
+    <script src="lib/jquery.contextMenu.js"></script>
+    <script src="lib/jquery.ui.position.js"></script>
     <script>
         var current_page = "<?php echo System::getCurrentUrl(); ?>";
         var current_user = '<?php echo System::getCurrentUser()->get_json(); ?>';
     </script>
+
+    <LINK type="text/css" href="lib/jquery.contextMenu.css" rel="stylesheet">
 
     <LINK type="text/css" href="salz_cloud.css" rel="stylesheet">
     <script type="text/javascript" src="salz_cloud.js"></script>

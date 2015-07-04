@@ -355,3 +355,11 @@ html.list-layout #files > div > span {
     bottom: auto;
     font-weight: bold;
 }
+
+
+/* ----------------------------------------------------------------------------------------------------------------- */
+/* Context menu */
+.context-menu-item.icon {
+    background-position: 0 2px;
+}
+.context-menu-item.icon-open { background-image: url(img/enter_folder.svg); }

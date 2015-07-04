@@ -4,6 +4,11 @@ $(function() {
 
     cloud = this;
 
+    var config = {};
+    config.jq_files_id = '#files';
+    config.domain = 'salzhimmel.de';
+    config.default_layout = 'grid';
+
     var storage = {};
 
     var html = $('html');
@@ -18,17 +23,17 @@ $(function() {
     function init() {
 
         // for ajax request
-        document.domain = "salzhimmel.de";
+        document.domain = config.domain;
 
         // init storage
         storage.current_user = null; // the current user -> set later by ajax request
         storage.current_folder = (window.location.hash == '' ? 1 : window.location.hash.substring(1)); // the current visible folder
         storage.selectedFiles = []; // files selected for upload
-        storage.jq_files = $('#files'); // site area to display files (and folders)
+        storage.jq_files = $(config.jq_files_id); // site area to display files (and folders)
         storage.popups = []; // visible popups Stack - FIFO
         storage.waitStack = 0; // how many wait requests are active
         storage.noMessages = false; // disable the display of any message pop-ups
-        storage.layout = 'grid'; // disable the display of any message pop-ups
+        storage.layout = config.default_layout; // disable the display of any message pop-ups
 
         // get current user
         api.get_current_user()
@@ -112,6 +117,25 @@ $(function() {
                 storage.jq_files.find('> div.folder').on('click', function(event) {
                     get_folder($(event.currentTarget).attr('data-id'));
                 });
+                $.contextMenu({
+                    selector: config.jq_files_id + ' > div.folder',
+                    callback: function(key, options) {
+                        if(key == 'open') {
+                            get_folder($(this).attr('data-id'));
+                        }
+                        var m = "clicked: " + key + " on " + $(this).text();;
+                        console.log("optiona: ");
+                        console.log(options);
+                        window.console && console.log(m) || alert(m);
+                    },
+                    items: {
+                        "open": {name: "Öffnen", icon: "open"},
+                        "sep1": "---------",
+                        "rename": {name: "Umbenennen", icon: "rename"},
+                        "delete": {name: "Löschen", icon: "delete"}
+                    }
+                });
+
             })
             .fail(function(jqXHR, textStatus, errorThrown) {
                 console.error('The folder could not be loaded ' + textStatus);
@@ -309,6 +333,7 @@ $(function() {
         row.remove();
     }
 
+    // creates a new folder with data from the form
     function createNewFolder() {
         // remove focus from from so ENTER will not submit it again
         document.activeElement.blur();
