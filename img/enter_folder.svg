@@ -2,6 +2,7 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
+   xmlns:osb="http://www.openswatchbook.org/uri/2009/osb"
    xmlns:dc="http://purl.org/dc/elements/1.1/"
    xmlns:cc="http://creativecommons.org/ns#"
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -18,53 +19,14 @@
    sodipodi:docname="enter_folder.svg">
   <defs
      id="defs4493">
-    <inkscape:path-effect
-       effect="skeletal"
-       id="path-effect4632"
-       is_visible="true"
-       pattern="m 0,1027.3622 c 0,-2.76 2.24,-5 5,-5 2.76,0 5,2.24 5,5 0,2.76 -2.24,5 -5,5 -2.76,0 -5,-2.24 -5,-5 z"
-       copytype="single_stretched"
-       prop_scale="1"
-       scale_y_rel="false"
-       spacing="0"
-       normal_offset="0"
-       tang_offset="0"
-       prop_units="false"
-       vertical_pattern="false"
-       fuse_tolerance="0" />
-    <inkscape:path-effect
-       effect="powerstroke"
-       id="path-effect4628"
-       is_visible="true"
-       offset_points="0,0.5"
-       sort_points="true"
-       interpolator_type="Linear"
-       interpolator_beta="0.2"
-       start_linecap_type="zerowidth"
-       linejoin_type="round"
-       miter_limit="4"
-       end_linecap_type="zerowidth"
-       cusp_linecap_type="round" />
-    <inkscape:path-effect
-       effect="powerstroke"
-       id="path-effect4624"
-       is_visible="true"
-       offset_points="0,0.5"
-       sort_points="true"
-       interpolator_type="Linear"
-       interpolator_beta="0.2"
-       start_linecap_type="zerowidth"
-       linejoin_type="round"
-       miter_limit="4"
-       end_linecap_type="zerowidth"
-       cusp_linecap_type="round" />
-    <inkscape:perspective
-       sodipodi:type="inkscape:persp3d"
-       inkscape:vp_x="0 : 15 : 1"
-       inkscape:vp_y="0 : 1000 : 0"
-       inkscape:vp_z="30 : 15 : 1"
-       inkscape:persp3d-origin="15 : 10 : 1"
-       id="perspective4499" />
+    <linearGradient
+       id="linearGradient7751"
+       osb:paint="solid">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop7753" />
+    </linearGradient>
   </defs>
   <sodipodi:namedview
      id="base"
@@ -75,9 +37,9 @@
      inkscape:pageshadow="2"
      inkscape:zoom="22.4"
      inkscape:cx="7.7359694"
-     inkscape:cy="16.815715"
+     inkscape:cy="7.8871432"
      inkscape:document-units="px"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="g6290"
      showgrid="false"
      units="px"
      inkscape:window-width="1920"
@@ -102,16 +64,6 @@
      inkscape:groupmode="layer"
      id="layer1"
      transform="translate(0,-1034.3622)">
-    <path
-       style="fill:#990011;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:0.69544816px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 6.0134052,1040.2335 6.2678878,2.7759"
-       id="path4620-4"
-       inkscape:connector-curvature="0" />
-    <path
-       style="fill:#990011;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:0.69544816px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 5.9709902,1046.5206 6.2678898,-2.7758"
-       id="path4620"
-       inkscape:connector-curvature="0" />
     <rect
        style="fill:#990011;fill-opacity:1"
        id="rect4515"
@@ -133,12 +85,31 @@
        height="14.619398"
        x="15.200399"
        y="1036.141" />
-    <rect
-       style="fill:#990011;fill-opacity:1"
-       id="rect4612"
-       width="12.436814"
-       height="1.3732944"
-       x="0"
-       y="1042.693" />
+    <g
+       id="g6290"
+       style="fill:#990011;fill-opacity:1">
+      <path
+         inkscape:connector-curvature="0"
+         id="path4620-4"
+         d="m 6.0134052,1040.2335 6.2678878,2.7759"
+         style="fill:#990011;fill-opacity:1;fill-rule:nonzero;stroke:#990011;stroke-width:0.69544816px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+      <path
+         inkscape:connector-curvature="0"
+         id="path4620"
+         d="m 5.9709902,1046.5206 6.2678898,-2.7758"
+         style="fill:#990011;fill-opacity:1;fill-rule:nonzero;stroke:#990011;stroke-width:0.69544816px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+      <rect
+         y="1042.693"
+         x="0"
+         height="1.3732944"
+         width="12.436814"
+         id="rect4612"
+         style="fill:#990011;fill-opacity:1" />
+      <path
+         style="fill:#800000;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;opacity:0"
+         d="m 1.6517857,1038.8801 0.8928572,0.5803 z"
+         id="path6297"
+         inkscape:connector-curvature="0" />
+    </g>
   </g>
 </svg>

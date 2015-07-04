@@ -1,1 +1,5 @@
 https://www.iconfinder.com/iconsets/hawcons
+
+delete.svg:
+https://www.iconfinder.com/icons/103181/close_cross_delete_remove_icon#size=128
+farbe geaendert

@@ -363,3 +363,5 @@ html.list-layout #files > div > span {
     background-position: 0 2px;
 }
 .context-menu-item.icon-open { background-image: url(img/enter_folder.svg); }
+.context-menu-item.icon-rename { background-image: url(img/edit.svg); }
+.context-menu-item.icon-delete { background-image: url(img/delete.svg); }

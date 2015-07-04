@@ -123,10 +123,6 @@ $(function() {
                         if(key == 'open') {
                             get_folder($(this).attr('data-id'));
                         }
-                        var m = "clicked: " + key + " on " + $(this).text();;
-                        console.log("optiona: ");
-                        console.log(options);
-                        window.console && console.log(m) || alert(m);
                     },
                     items: {
                         "open": {name: "Öffnen", icon: "open"},
