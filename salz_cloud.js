@@ -72,6 +72,24 @@ $(function() {
 
         // set initial layout
         setLayout(storage.layout);
+
+        // render context menu
+        $.contextMenu({
+            selector: config.jq_files_id + ' > div.folder',
+            callback: function(key, options) {
+                if(key == 'open') {
+                    get_folder($(this).attr('data-id'));
+                } else if(key == 'delete') {
+                    deleteFolder($(this).attr('data-id'));
+                }
+            },
+            items: {
+                "open": {name: "Öffnen", icon: "open"},
+                "sep1": "---------",
+                "rename": {name: "Umbenennen", icon: "rename"},
+                "delete": {name: "Löschen", icon: "delete"}
+            }
+        });
     }
 
     /*
@@ -119,25 +137,6 @@ $(function() {
                 storage.jq_files.find('> div.file').on('click', showFile);
                 storage.jq_files.find('> div.folder').on('click', function(event) {
                     get_folder($(event.currentTarget).attr('data-id'));
-                });
-
-                // add context menu to the elements
-                $('.context-menu-root').remove(); // delete old context menus from last folder
-                $.contextMenu({
-                    selector: config.jq_files_id + ' > div.folder',
-                    callback: function(key, options) {
-                        if(key == 'open') {
-                            get_folder($(this).attr('data-id'));
-                        } else if(key == 'delete') {
-                            deleteFolder($(this).attr('data-id'));
-                        }
-                    },
-                    items: {
-                        "open": {name: "Öffnen", icon: "open"},
-                        "sep1": "---------",
-                        "rename": {name: "Umbenennen", icon: "rename"},
-                        "delete": {name: "Löschen", icon: "delete"}
-                    }
                 });
 
             })
