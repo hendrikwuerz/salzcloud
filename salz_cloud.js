@@ -100,6 +100,7 @@ $(function() {
                 storage.current_folder = id;
                 window.location.hash = id;
 
+                // load new elements of current folder
                 //console.log( data );
                 storage.jq_files.html(""); // remove old elements
                 $.each(data, function(index, elem) {
@@ -112,16 +113,23 @@ $(function() {
 
                     storage.jq_files.append(html);
                 });
+
+                // add listener to the new elements
                 console.log('finished loading folder ' + id);
                 storage.jq_files.find('> div.file').on('click', showFile);
                 storage.jq_files.find('> div.folder').on('click', function(event) {
                     get_folder($(event.currentTarget).attr('data-id'));
                 });
+
+                // add context menu to the elements
+                $('.context-menu-root').remove(); // delete old context menus from last folder
                 $.contextMenu({
                     selector: config.jq_files_id + ' > div.folder',
                     callback: function(key, options) {
                         if(key == 'open') {
                             get_folder($(this).attr('data-id'));
+                        } else if(key == 'delete') {
+                            deleteFolder($(this).attr('data-id'));
                         }
                     },
                     items: {
@@ -133,11 +141,13 @@ $(function() {
                 });
 
             })
+
             .fail(function(jqXHR, textStatus, errorThrown) {
                 console.error('The folder could not be loaded ' + textStatus);
                 console.log(errorThrown);
                 showError('Fehler', 'Der Ordnerinhalt konnte nicht geladen werden. Möglicherweise haben Sie keine Rechte');
             })
+
             .always(function() {
                 loading(false);
             });
@@ -347,6 +357,26 @@ $(function() {
                 closePopup('new-folder-visible');
                 get_folder();
             });
+    }
+
+    // creates a new folder with data from the form
+    function deleteFolder(id) {
+        if(window.confirm("Wollen Sie diesen Ordner wirklich löschen?")) {
+            loading(true);
+            api.delete_folder(id)
+                .done(function() {
+                    showSuccess('Gelöscht', 'Der Ordner wurde gelöscht');
+                })
+                .fail(function(jqXHR, textStatus, errorThrown) {
+                    console.log('Folder could not be deleted correctly ' + textStatus);
+                    console.log(errorThrown);
+                    showError('Fehler', 'Der Ordner konnte nicht gelöscht werden. Bei der Ausführung trat ein Fehler auf');
+                })
+                .always(function() {
+                    get_folder();
+                    loading(false);
+                });
+        }
     }
 
 
@@ -658,6 +688,14 @@ $(function() {
         get_folder: function (folder) {
             return $.ajax({
                 url: 'api.php?q=get_folder&v=' + folder,
+                type: 'GET',
+                dataType: 'json'
+            });
+        },
+
+        delete_folder: function (folder) {
+            return $.ajax({
+                url: 'api.php?q=delete_folder&v=' + folder,
                 type: 'GET',
                 dataType: 'json'
             });

@@ -468,6 +468,18 @@ class CloudAPI {
         echo json_encode($data);
     }
 
+    /**
+     * Creates a new folder as subfolder of the folder passed in parent with the name "name"
+     * Current user needs write access to the parent folder
+     * Current user will have admin access to the new folder
+     * @param string $name
+     *          The name of the new folder
+     * @param int $parent
+     *          The ID of the parent folder
+     * @echo
+     *          JSON with the created ID
+     * TODO: Add update options
+     */
     static function setFolder($name, $parent) {
         $mysqli = System::connect('cloud');
         $current_user = System::getCurrentUser();
@@ -491,6 +503,40 @@ class CloudAPI {
             header('HTTP/1.0 403 Forbidden');
             echo new ErrorMessage(403, 'Forbidden', 'You do not have access to create a folder here');
         }
+    }
+
+    /**
+     * deletes the folder with the passed ID
+     * The current user needs admin access to the folder.
+     * TODO: Subfolders, -files will not be removed
+     * @param int $id
+     *          The ID of the folder
+     * @echo
+     *          The ID of the deleted folder
+     */
+    static function deleteFolder($id) {
+        $mysqli = System::connect('cloud');
+        $id = $mysqli->real_escape_string($id);
+
+        if(Util::has_admin_access($id, 'folder')) {
+            // delete all rights of this folder
+            $sql = "DELETE FROM rights WHERE data_type LIKE 'folder' AND data_id = $id";
+            $mysqli->query($sql);
+
+            // Delete file from Database
+            $sql = "DELETE FROM folders WHERE id = $id";
+            $mysqli->query($sql);
+
+            // Output
+            header('HTTP/1.0 200 OK');
+            echo json_encode(array('id' => $id));
+            die;
+        }
+
+        // not found or no admin access
+        header('HTTP/1.0 403 Forbidden');
+        echo new ErrorMessage(403, 'Forbidden', 'You have no admin access to the requested folder.');
+        exit;
     }
 
     /**
@@ -743,14 +789,17 @@ else if($_GET['q'] == 'get_current_user' || $_GET['q'] == 'whoami') { // return 
     }
     CloudAPI::setRights($_POST['id'], $_POST['user'], $_POST['access'], $type);
 
+} else if($_GET['q'] == 'get_folder') { // list the content of the folder with the passed ID
+    CloudAPI::getFolder($_GET['v']);
+
 } else if($_GET['q'] == 'set_folder') { // creates a new folder
     if(isset($_POST['name']) && isset($_POST['parent']))
         CloudAPI::setFolder($_POST['name'], $_POST['parent']);
     else
         CloudAPI::setFolder($_GET['name'], $_GET['parent']);
 
-} else if($_GET['q'] == 'get_folder') { // list the content of the folder with the passed ID
-    CloudAPI::getFolder($_GET['v']);
+} else if($_GET['q'] == 'delete_folder') { // list the content of the folder with the passed ID
+    CloudAPI::deleteFolder($_GET['v']);
 
 } else if($_GET['q'] == 'get_parent_folder') { // get the ID of the parent-folder from the folder with the passed ID
     CloudAPI::getParentFolder($_GET['id']);
